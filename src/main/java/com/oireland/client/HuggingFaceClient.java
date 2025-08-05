@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.HuggingFaceApiConfig;
 import com.oireland.dto.HuggingFaceResponseDTO;
-import com.oireland.dto.TaskListDTO;
 import com.oireland.exception.InvalidHuggingFaceResponseException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

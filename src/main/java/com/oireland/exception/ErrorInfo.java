@@ -1,7 +1,9 @@
 package com.oireland.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 
+@Getter
 public class ErrorInfo {
     private final String url;
     private final String message;
@@ -16,11 +18,4 @@ public class ErrorInfo {
         this.message = ex.getMessage();
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public String getMessage() {
-        return message;
-    }
 }
