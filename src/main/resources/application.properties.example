@@ -4,6 +4,7 @@ spring.application.name=TaskExtractionApp
 notion.api.token=YOUR_NOTION_API_TOKEN_HERE
 notion.api.database-id=YOUR_NOTION_DATABASE_ID_HERE
 notion.api.version=2022-06-28
+notion.api.baseUrl=https://api.notion.com
 
 # -- Hugging Face API Configuration --
 huggingface.api.token=YOUR_HUGGINGFACE_API_TOKEN_HERE

@@ -19,7 +19,7 @@ public class NotionClient {
     public NotionClient(WebClient.Builder webClientBuilder, NotionApiConfig config) {
         this.config = config;
         this.webClient = webClientBuilder
-                .baseUrl("https://api.notion.com") // Notion API base URL
+                .baseUrl(config.baseUrl()) // Notion API base URL
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + config.token())
                 .defaultHeader("Notion-Version", config.version()) // Notion-specific header
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
