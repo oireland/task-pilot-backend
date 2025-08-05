@@ -2,6 +2,7 @@ package com.oireland.service;
 
 import com.oireland.client.HuggingFaceClient;
 import com.oireland.dto.TaskListDTO;
+import com.oireland.exception.InvalidHuggingFaceResponseException;
 import com.oireland.prompt.PromptFactory;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class TaskRouterService {
         this.promptFactory = promptFactory;
     }
 
-    public TaskListDTO processDocument(String documentText) {
+    public TaskListDTO processDocument(String documentText) throws InvalidHuggingFaceResponseException {
         String chosenPrompt;
 
         // The core routing logic

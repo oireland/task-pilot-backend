@@ -7,3 +7,4 @@ notion.api.version=2022-06-28
 
 # -- Hugging Face API Configuration --
 huggingface.api.token=YOUR_HUGGINGFACE_API_TOKEN_HERE
+huggingface.api.base-url=https://api-inference.huggingface.co
