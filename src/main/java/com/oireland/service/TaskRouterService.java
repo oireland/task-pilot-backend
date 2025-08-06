@@ -1,9 +1,10 @@
 package com.oireland.service;
 
-import com.oireland.client.HuggingFaceClient;
-import com.oireland.dto.TaskListDTO;
-import com.oireland.exception.InvalidHuggingFaceResponseException;
+import com.oireland.exception.InvalidLLMResponseException;
+import com.oireland.model.TaskListDTO;
 import com.oireland.prompt.PromptFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
@@ -12,27 +13,30 @@ import java.util.regex.Pattern;
 public class TaskRouterService {
 
     // Regex to find "Exercise <number>" case-insensitively.
+    private final Logger logger = LoggerFactory.getLogger(TaskRouterService.class);
     private static final Pattern EXERCISE_PATTERN = Pattern.compile("(?i)exercise\\s+\\d+(\\.\\d+)*");
 
-    private final HuggingFaceClient hfClient;
+    private final LLMService llmService;
     private final PromptFactory promptFactory;
 
-    public TaskRouterService(HuggingFaceClient hfClient, PromptFactory promptFactory) {
-        this.hfClient = hfClient;
+    public TaskRouterService(LLMService llmService, PromptFactory promptFactory) {
+        this.llmService = llmService;
         this.promptFactory = promptFactory;
     }
 
-    public TaskListDTO processDocument(String documentText) throws InvalidHuggingFaceResponseException {
+    public TaskListDTO processDocument(String documentText) throws InvalidLLMResponseException {
         String chosenPrompt;
 
         // The core routing logic
         if (EXERCISE_PATTERN.matcher(documentText).find()) {
+            logger.info("Detected 'Exercise' pattern in document text. Using exercise-specific prompt.");
             chosenPrompt = String.format(promptFactory.exercisePatternPromptTemplate, documentText);
         } else {
+            logger.info("No 'Exercise' pattern detected. Using general task prompt.");
             chosenPrompt = String.format(promptFactory.generalTaskPromptTemplate, documentText);
         }
 
         // Call the client with the selected, formatted prompt
-        return hfClient.executePrompt(chosenPrompt, TaskListDTO.class);
+        return llmService.executePrompt(chosenPrompt, TaskListDTO.class);
     }
 }

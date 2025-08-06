@@ -2,8 +2,8 @@ package com.oireland.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.NotionApiConfig;
-import com.oireland.dto.TaskDTO;
-import com.oireland.notion.NotionApiV1;
+import com.oireland.model.NotionApiV1;
+import com.oireland.model.TaskDTO;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -72,10 +72,10 @@ class NotionClientTest {
         NotionApiV1.PageCreateRequest parsedRequest = objectMapper.readValue(requestBodyJson, NotionApiV1.PageCreateRequest.class);
 
         assertThat(parsedRequest.parent().databaseId()).isEqualTo("test-db-id");
-        assertThat(parsedRequest.properties().taskName().get("title").get(0).get("text").get("content"))
+        assertThat(parsedRequest.properties().taskName().get("title").getFirst().get("text").get("content"))
                 .isEqualTo("Review new feature");
-        assertThat(parsedRequest.properties().status().name()).isEqualTo("Not started");
-        assertThat(parsedRequest.properties().description().get("rich_text").get(0).get("text").get("content"))
+        assertThat(parsedRequest.properties().status().get("status").get("name")).isEqualTo("Not started");
+        assertThat(parsedRequest.properties().description().get("rich_text").getFirst().get("text").get("content"))
                 .isEqualTo("Review the new prompt routing feature.");
     }
 }

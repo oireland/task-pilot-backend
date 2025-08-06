@@ -1,10 +1,10 @@
 package com.oireland.client;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.HuggingFaceApiConfig;
-import com.oireland.dto.TaskListDTO;
-import com.oireland.exception.InvalidHuggingFaceResponseException;
+import com.oireland.exception.InvalidLLMResponseException;
+import com.oireland.model.TaskListDTO;
+import com.oireland.service.HuggingFaceService;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -18,10 +18,10 @@ import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class HuggingFaceClientTest {
+public class HuggingFaceServiceTest {
 
     private static MockWebServer mockWebServer;
-    private HuggingFaceClient huggingFaceClient;
+    private HuggingFaceService huggingFaceService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -41,11 +41,12 @@ public class HuggingFaceClientTest {
         // For each test we create a new client pointing to our mock server
         String baseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
         HuggingFaceApiConfig testConfig = new HuggingFaceApiConfig(baseUrl, "test-token"); // Use a dummy token
-        huggingFaceClient = new HuggingFaceClient(WebClient.builder(), testConfig, objectMapper);
+        HuggingFaceClient testClient = new HuggingFaceClient(WebClient.builder(), testConfig);
+        huggingFaceService = new HuggingFaceService(testClient, objectMapper);
     }
 
     @Test
-    void executePrompt_shouldReturnDeserializedObject_whenApiSucceeds() throws InterruptedException, InvalidHuggingFaceResponseException {
+    void executePrompt_shouldReturnDeserializedObject_whenApiSucceeds() throws InterruptedException, InvalidLLMResponseException {
         // 1. ARRANGE
         String mockApiResponse = """
         [
@@ -62,7 +63,7 @@ public class HuggingFaceClientTest {
 
         // 2. ACT
         // The key change: Call the new method and pass the expected class.
-        TaskListDTO result = huggingFaceClient.executePrompt(dummyPrompt, TaskListDTO.class);
+        TaskListDTO result = huggingFaceService.executePrompt(dummyPrompt, TaskListDTO.class);
 
         // 3. ASSERT
         // All assertions remain the same and are still valid.

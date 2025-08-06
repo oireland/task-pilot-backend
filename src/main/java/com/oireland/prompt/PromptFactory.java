@@ -10,9 +10,9 @@ public class PromptFactory {
 
     Follow these instructions precisely:
     1. Identify every line that begins with the pattern "Exercise <Number>".
-    2. The 'task_name' MUST be the exercise identifier itself (e.g., "Exercise 1.1", "Exercise 2.3.4").
-    3. The 'description' MUST be the full text of the exercise problem that follows the identifier.
-    4. The 'status' MUST always be "Not started".
+    2. The 'Task Name' MUST be the exercise identifier itself (e.g., "Exercise 1.1", "Exercise 2.3.4").
+    3. The 'Description' MUST be the full text of the exercise problem that follows the identifier.
+    4. The 'Status' MUST always be "Not started".
     5. IMPORTANT: Ignore all other text, such as notes, theory, or examples. Focus only on the numbered exercises.
 
     Here is a perfect example of the format:
@@ -30,14 +30,14 @@ public class PromptFactory {
     {
       "tasks": [
         {
-          "task_name": "Exercise 3.1",
-          "status": "Not started",
-          "description": "Find the derivative of f(x) = x^2 * sin(x)."
+          "Task Name": "Exercise 3.1",
+          "Status": "Not started",
+          "Description": "Find the derivative of f(x) = x^2 * sin(x)."
         },
         {
-          "task_name": "Exercise 3.2",
-          "status": "Not started",
-          "description": "Calculate the integral of ln(x) dx from 1 to e."
+          "Task Name": "Exercise 3.2",
+          "Status": "Not started",
+          "Description": "Calculate the integral of ln(x) dx from 1 to e."
         }
       ]
     }
@@ -54,9 +54,9 @@ public class PromptFactory {
     public final String generalTaskPromptTemplate = """
     You are an expert project manager's assistant. Your task is to extract tasks from the following document.
     Analyze the text and identify all actionable tasks. For each task, extract the following information:
-    - task_name: A concise name for the task.
-    - status: Default to 'Not started'.
-    - description: A one or two-sentence summary of the task's context and purpose.
+    - 'Task Name': A concise name for the task.
+    - 'Status': Default to 'Not started'.
+    - 'Description': A one or two-sentence summary of the task's context and purpose.
 
     Respond ONLY with a valid JSON object containing a single key "tasks" which is an array of the tasks you found. Do not include any other text, explanations, or apologies.
 
