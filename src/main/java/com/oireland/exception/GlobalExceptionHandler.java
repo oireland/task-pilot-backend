@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         return new ErrorInfo(request, ex);
     }
 
-    @ExceptionHandler(InvalidHuggingFaceResponseException.class)
+    @ExceptionHandler(InvalidLLMResponseException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorInfo handleInvalidHuggingFaceResponse(HttpServletRequest request, Exception ex) {
         logger.error("Received empty or invalid response from Hugging Face API.");

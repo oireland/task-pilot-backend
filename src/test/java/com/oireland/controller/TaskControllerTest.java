@@ -1,8 +1,8 @@
 package com.oireland.controller;
 
-import com.oireland.dto.TaskDTO;
-import com.oireland.dto.TaskListDTO;
 import com.oireland.exception.UnsupportedFileTypeException;
+import com.oireland.model.TaskDTO;
+import com.oireland.model.TaskListDTO;
 import com.oireland.service.DocumentParsingService;
 import com.oireland.service.NotionPageService;
 import com.oireland.service.TaskRouterService;

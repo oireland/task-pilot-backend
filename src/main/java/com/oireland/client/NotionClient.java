@@ -1,18 +1,19 @@
 package com.oireland.client;
 
 import com.oireland.config.NotionApiConfig;
-import com.oireland.dto.TaskDTO;
-import com.oireland.notion.NotionApiV1;
+import com.oireland.model.NotionApiV1;
+import com.oireland.model.TaskDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.Map;
-
 @Service
 public class NotionClient {
 
+    private final Logger logger = LoggerFactory.getLogger(NotionClient.class);
     private final WebClient webClient;
     private final NotionApiConfig config;
 
@@ -27,7 +28,9 @@ public class NotionClient {
     }
 
     public void createTask(TaskDTO task) {
-        var requestBody = getPageCreateRequest(task);
+        logger.info("Creating task in Notion: {}", task.taskName());
+        var requestBody = NotionApiV1.buildCreateTaskRequest(task, config.databaseId());
+        logger.info("Request body for Notion API: {}", requestBody);
 
         // Make the API call
         webClient
@@ -39,22 +42,4 @@ public class NotionClient {
                 .block(); // Wait for the operation to complete
     }
 
-    private NotionApiV1.PageCreateRequest getPageCreateRequest(TaskDTO task) {
-        // Build the 'properties' object using our API DTOs
-        var title = new NotionApiV1.TitleProperty(task.taskName());
-        var status = new NotionApiV1.StatusProperty(task.status());
-        var description = new NotionApiV1.RichTextProperty(task.description());
-
-        var properties = new NotionApiV1.Properties(
-                Map.of("title", title.toRequestFormat()),
-                status,
-                Map.of("rich_text", description.toRequestFormat())
-        );
-
-        // Build the 'parent' object
-        var parent = new NotionApiV1.Parent(config.databaseId());
-
-        // Build the final request body
-        return new NotionApiV1.PageCreateRequest(parent, properties);
-    }
 }

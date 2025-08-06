@@ -8,4 +8,5 @@ notion.api.baseUrl=https://api.notion.com
 
 # -- Hugging Face API Configuration --
 huggingface.api.token=YOUR_HUGGINGFACE_API_TOKEN_HERE
-huggingface.api.base-url=https://api-inference.huggingface.co
+huggingface.api.base-url=https://router.huggingface.co/
+
