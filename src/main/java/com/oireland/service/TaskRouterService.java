@@ -1,7 +1,7 @@
 package com.oireland.service;
 
 import com.oireland.exception.InvalidLLMResponseException;
-import com.oireland.model.TaskListDTO;
+import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.prompt.PromptFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +12,9 @@ import java.util.regex.Pattern;
 @Service
 public class TaskRouterService {
 
+    private static final Pattern EXERCISE_PATTERN = Pattern.compile("(?i)exercise\\s+\\d+(\\.\\d+)*");
     // Regex to find "Exercise <number>" case-insensitively.
     private final Logger logger = LoggerFactory.getLogger(TaskRouterService.class);
-    private static final Pattern EXERCISE_PATTERN = Pattern.compile("(?i)exercise\\s+\\d+(\\.\\d+)*");
-
     private final LLMService llmService;
     private final PromptFactory promptFactory;
 
@@ -24,7 +23,7 @@ public class TaskRouterService {
         this.promptFactory = promptFactory;
     }
 
-    public TaskListDTO processDocument(String documentText) throws InvalidLLMResponseException {
+    public ExtractedDocDataDTO processDocument(String documentText) throws InvalidLLMResponseException {
         String chosenPrompt;
 
         // The core routing logic
@@ -37,6 +36,6 @@ public class TaskRouterService {
         }
 
         // Call the client with the selected, formatted prompt
-        return llmService.executePrompt(chosenPrompt, TaskListDTO.class);
+        return llmService.executePrompt(chosenPrompt, ExtractedDocDataDTO.class);
     }
 }

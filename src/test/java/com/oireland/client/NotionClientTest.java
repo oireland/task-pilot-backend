@@ -2,8 +2,8 @@ package com.oireland.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.NotionApiConfig;
+import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.model.NotionApiV1;
-import com.oireland.model.TaskDTO;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -14,11 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class NotionClientTest {
-
     private static MockWebServer mockWebServer;
     private NotionClient notionClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -37,26 +38,26 @@ class NotionClientTest {
     @BeforeEach
     void initialize() {
         String mockApiBaseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
-        // Create a test-specific config for Notion
         NotionApiConfig testConfig = new NotionApiConfig("test-notion-token", "test-db-id", "test-version", mockApiBaseUrl);
         notionClient = new NotionClient(WebClient.builder(), testConfig);
     }
 
     @Test
-    void createTask_shouldSendCorrectlyFormattedRequest() throws IOException, InterruptedException {
+    void createTasksPage_shouldSendCorrectlyFormattedRequest() throws IOException, InterruptedException {
         // 1. ARRANGE
-        // The Notion API returns a 200 OK with the created page object, but our client
-        // doesn't use it, so an empty 200 is fine for this test.
         mockWebServer.enqueue(new MockResponse().setResponseCode(200));
 
-        // The input DTO for our method
-        var taskToCreate = new TaskDTO("Review new feature", "Not started", "Review the new prompt routing feature.");
+        var docToCreate = new ExtractedDocDataDTO(
+                "Review new feature",
+                "Not started",
+                "Review the new prompt routing feature",
+                List.of("Check everything works as expected", "Ensure no regressions")
+        );
 
         // 2. ACT
-        notionClient.createTask(taskToCreate);
+        notionClient.createTasksPage(docToCreate);
 
         // 3. ASSERT
-        // Verify the request that was sent TO our mock server.
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
 
         // Assert method and path
@@ -67,15 +68,45 @@ class NotionClientTest {
         assertThat(recordedRequest.getHeader("Authorization")).isEqualTo("Bearer test-notion-token");
         assertThat(recordedRequest.getHeader("Notion-Version")).isEqualTo("test-version");
 
-        // Assert the request body by parsing it back into our API DTOs
+        // Assert the request body
         String requestBodyJson = recordedRequest.getBody().readUtf8();
         NotionApiV1.PageCreateRequest parsedRequest = objectMapper.readValue(requestBodyJson, NotionApiV1.PageCreateRequest.class);
 
+        // Verify core properties
         assertThat(parsedRequest.parent().databaseId()).isEqualTo("test-db-id");
-        assertThat(parsedRequest.properties().taskName().get("title").getFirst().get("text").get("content"))
+
+        // Verify task name
+        assertThat(parsedRequest.properties().taskName().get("title")
+                .getFirst().get("text").get("content"))
                 .isEqualTo("Review new feature");
-        assertThat(parsedRequest.properties().status().get("status").get("name")).isEqualTo("Not started");
-        assertThat(parsedRequest.properties().description().get("rich_text").getFirst().get("text").get("content"))
-                .isEqualTo("Review the new prompt routing feature.");
+
+        // Verify status
+        assertThat(parsedRequest.properties().status().get("status").get("name"))
+                .isEqualTo("Not started");
+
+        // Verify description
+        assertThat(parsedRequest.properties().description().get("rich_text")
+                .getFirst().get("text").get("content"))
+                .isEqualTo("Review the new prompt routing feature");
+
+        // Verify children to_do blocks
+        List<Map<String, Object>> children = parsedRequest.children();
+        assertThat(children).hasSize(2);
+
+        // Verify first to_do block
+        Map<String, Object> firstTodo = children.getFirst();
+        assertThat(firstTodo.get("type")).isEqualTo("to_do");
+        Map<String, Object> firstTodoContent = (Map<String, Object>) firstTodo.get("to_do");
+        List<Map<String, Object>> firstTodoRichText = (List<Map<String, Object>>) firstTodoContent.get("rich_text");
+        assertThat(((Map<String, String>) firstTodoRichText.getFirst().get("text")).get("content"))
+                .isEqualTo("Check everything works as expected");
+
+        // Verify second to_do block
+        Map<String, Object> secondTodo = children.get(1);
+        assertThat(secondTodo.get("type")).isEqualTo("to_do");
+        Map<String, Object> secondTodoContent = (Map<String, Object>) secondTodo.get("to_do");
+        List<Map<String, Object>> secondTodoRichText = (List<Map<String, Object>>) secondTodoContent.get("rich_text");
+        assertThat(((Map<String, String>) secondTodoRichText.getFirst().get("text")).get("content"))
+                .isEqualTo("Ensure no regressions");
     }
 }

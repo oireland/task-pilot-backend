@@ -1,8 +1,8 @@
 package com.oireland.client;
 
 import com.oireland.config.NotionApiConfig;
+import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.model.NotionApiV1;
-import com.oireland.model.TaskDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -27,9 +27,9 @@ public class NotionClient {
                 .build();
     }
 
-    public void createTask(TaskDTO task) {
-        logger.info("Creating task in Notion: {}", task.taskName());
-        var requestBody = NotionApiV1.buildCreateTaskRequest(task, config.databaseId());
+    public void createTasksPage(ExtractedDocDataDTO doc) {
+        logger.info("Creating task in Notion: {}", doc.title());
+        var requestBody = NotionApiV1.buildCreateTaskRequest(doc, config.databaseId());
         logger.info("Request body for Notion API: {}", requestBody);
 
         // Make the API call

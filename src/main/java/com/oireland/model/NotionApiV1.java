@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
-// This class is just a container for our Notion-specific DTOs.
 public final class NotionApiV1 {
-
-    // Records for building the 'properties' object
     public record TitleProperty(String content) {
         public Map<String, List<Map<String, Map<String, String>>>> toRequestFormat() {
             return Map.of("title", List.of(Map.of("text", Map.of("content", content))));
@@ -27,32 +24,50 @@ public final class NotionApiV1 {
         }
     }
 
-    // Record for the complete 'properties' section of the request
+    public record TodoBlock(String content, boolean checked) {
+        public Map<String, Object> toRequestFormat() {
+            return Map.of(
+                    "object", "block",
+                    "type", "to_do",
+                    "to_do", Map.of(
+                            "rich_text", List.of(Map.of("text", Map.of("content", content))),
+                            "checked", checked
+                    )
+            );
+        }
+    }
+
     public record Properties(
-            @JsonProperty("Task Name") Map<String, List<Map<String, Map<String, String>>>> taskName,
+            @JsonProperty("Title") Map<String, List<Map<String, Map<String, String>>>> taskName,
             @JsonProperty("Status") Map<String, Map<String, String>> status,
             @JsonProperty("Description") Map<String, List<Map<String, Map<String, String>>>> description
     ) {}
 
-    // Record for the 'parent' section of the request
     public record Parent(@JsonProperty("database_id") String databaseId) {}
 
-    // The top-level request body record
-    public record PageCreateRequest(Parent parent, Properties properties) {}
+    public record PageCreateRequest(
+            Parent parent,
+            Properties properties,
+            List<Map<String, Object>> children
+    ) {}
 
-    public static PageCreateRequest buildCreateTaskRequest(TaskDTO task, String databaseId) {
-        var titleProp = new NotionApiV1.TitleProperty(task.taskName());
-        var statusProp = new NotionApiV1.StatusProperty(task.status());
-        var descriptionProp = new NotionApiV1.RichTextProperty(task.description());
+    public static PageCreateRequest buildCreateTaskRequest(ExtractedDocDataDTO doc, String databaseId) {
+        var titleProp = new TitleProperty(doc.title());
+        var statusProp = new StatusProperty(doc.status());
+        var descriptionProp = new RichTextProperty(doc.description());
 
-        var properties = new NotionApiV1.Properties(
+        var properties = new Properties(
                 titleProp.toRequestFormat(),
                 statusProp.toRequestFormat(),
                 descriptionProp.toRequestFormat()
         );
 
-        var parent = new NotionApiV1.Parent(databaseId);
+        var children = doc.tasks().stream()
+                .map(task -> new TodoBlock(task, false).toRequestFormat())
+                .toList();
 
-        return new NotionApiV1.PageCreateRequest(parent, properties);
+        var parent = new Parent(databaseId);
+
+        return new PageCreateRequest(parent, properties, children);
     }
 }

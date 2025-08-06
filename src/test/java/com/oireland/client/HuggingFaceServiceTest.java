@@ -3,7 +3,7 @@ package com.oireland.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.HuggingFaceApiConfig;
 import com.oireland.exception.InvalidLLMResponseException;
-import com.oireland.model.TaskListDTO;
+import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.service.HuggingFaceService;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -17,13 +17,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HuggingFaceServiceTest {
 
     private static MockWebServer mockWebServer;
-    private HuggingFaceService huggingFaceService;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private HuggingFaceService huggingFaceService;
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -38,9 +38,8 @@ public class HuggingFaceServiceTest {
 
     @BeforeEach
     void initialise() {
-        // For each test we create a new client pointing to our mock server
         String baseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
-        HuggingFaceApiConfig testConfig = new HuggingFaceApiConfig(baseUrl, "test-token"); // Use a dummy token
+        HuggingFaceApiConfig testConfig = new HuggingFaceApiConfig(baseUrl, "test-token");
         HuggingFaceClient testClient = new HuggingFaceClient(WebClient.builder(), testConfig);
         huggingFaceService = new HuggingFaceService(testClient, objectMapper);
     }
@@ -49,12 +48,28 @@ public class HuggingFaceServiceTest {
     void executePrompt_shouldReturnDeserializedObject_whenApiSucceeds() throws InterruptedException, InvalidLLMResponseException {
         // 1. ARRANGE
         String mockApiResponse = """
-        [
-          {
-            "generated_text": "{\\"tasks\\":[{\\"Task Name\\":\\"Test Exercise 1\\",\\"Status\\":\\"Not started\\",\\"Description\\":\\"This is a test description.\\"}]}"
-          }
-        ]
-        """;
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion",
+                    "created": 1677858242,
+                    "model": "mistralai/Mistral-7B-Instruct-v0.2",
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": {
+                                    "Title": "Test Document",
+                                    "Status": "In Progress",
+                                    "Description": "This is a test description",
+                                    "Tasks": ["Test Exercise 1"]
+                                }
+                            },
+                            "index": 0,
+                            "finish_reason": "stop"
+                        }
+                    ]
+                }
+                """;
         mockWebServer.enqueue(new MockResponse()
                 .setBody(mockApiResponse)
                 .addHeader("Content-Type", "application/json"));
@@ -62,17 +77,36 @@ public class HuggingFaceServiceTest {
         String dummyPrompt = "This is a dummy prompt for testing.";
 
         // 2. ACT
-        // The key change: Call the new method and pass the expected class.
-        TaskListDTO result = huggingFaceService.executePrompt(dummyPrompt, TaskListDTO.class);
+        ExtractedDocDataDTO result = huggingFaceService.executePrompt(dummyPrompt, ExtractedDocDataDTO.class);
 
         // 3. ASSERT
-        // All assertions remain the same and are still valid.
         assertThat(result).isNotNull();
-        assertThat(result.tasks()).hasSize(1);
-        assertThat(result.tasks().getFirst().taskName()).isEqualTo("Test Exercise 1");
+        assertThat(result.title()).isEqualTo("Test Document");
+        assertThat(result.status()).isEqualTo("In Progress");
+        assertThat(result.description()).isEqualTo("This is a test description");
+        assertThat(result.tasks()).containsExactly("Test Exercise 1");
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
         assertThat(recordedRequest.getHeader("Authorization")).isEqualTo("Bearer test-token");
+    }
+
+    @Test
+    void executePrompt_shouldThrowException_whenApiReturnsEmptyResponse() {
+        // ARRANGE
+        String emptyResponse = """
+                {
+                    "id": "chatcmpl-123",
+                    "choices": []
+                }
+                """;
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(emptyResponse)
+                .addHeader("Content-Type", "application/json"));
+
+        // ACT & ASSERT
+        assertThrows(InvalidLLMResponseException.class, () ->
+                huggingFaceService.executePrompt("test prompt", ExtractedDocDataDTO.class)
+        );
     }
 }

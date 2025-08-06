@@ -1,8 +1,7 @@
 package com.oireland.controller;
 
 import com.oireland.exception.UnsupportedFileTypeException;
-import com.oireland.model.TaskDTO;
-import com.oireland.model.TaskListDTO;
+import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.service.DocumentParsingService;
 import com.oireland.service.NotionPageService;
 import com.oireland.service.TaskRouterService;
@@ -38,64 +37,38 @@ class TaskControllerTest {
     @Test
     void extractTasksFromFile_shouldReturnAccepted_whenFileIsValid() throws Exception {
         // ARRANGE
-        var mockFile = new MockMultipartFile(
-                "file",
-                "test.txt",
-                "text/plain",
-                "Some file content".getBytes()
-        );
+        var mockFile = new MockMultipartFile("file", "test.txt", "text/plain", "Some file content".getBytes());
 
         // We mock the services
-        TaskListDTO mockTasks = new TaskListDTO(List.of(
-                new TaskDTO("Task 1", "Not Started", "Wash the dishes"),
-                new TaskDTO("Task 2", "In Progress", "Clean the house")
-        ));
+        ExtractedDocDataDTO mockData = new ExtractedDocDataDTO("Review new feature", "Not started", "Review the new prompt routing feature", List.of("Check everything works as expected", "Ensure no regressions"));
 
-        when(parsingService.parseDocument(any(MockMultipartFile.class)))
-                .thenReturn("Parsed document text");
-        when(taskRouterService.processDocument(any(String.class)))
-                .thenReturn(mockTasks);
-        doNothing().when(notionPageService).createPagesFromTasks(mockTasks.tasks());
+        when(parsingService.parseDocument(any(MockMultipartFile.class))).thenReturn("Parsed document text");
+        when(taskRouterService.processDocument(any(String.class))).thenReturn(mockData);
+        doNothing().when(notionPageService).createTasksPage(mockData);
 
         // ACT & ASSERT
-        mockMvc.perform(multipart("/api/v1/tasks/extract").file(mockFile))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.message").value("File received and processing started."));
+        mockMvc.perform(multipart("/api/v1/tasks/extract").file(mockFile)).andExpect(status().isAccepted()).andExpect(jsonPath("$.message").value("File received and processing started."));
     }
 
     @Test
     void extractTasksFromFile_shouldReturnBadRequest_whenFileIsEmpty() throws Exception {
         // ARRANGE
-        var emptyFile = new MockMultipartFile(
-                "file",
-                "empty.txt",
-                "text/plain",
-                new byte[0]
-        );
+        var emptyFile = new MockMultipartFile("file", "empty.txt", "text/plain", new byte[0]);
 
         // ACT & ASSERT
-        mockMvc.perform(multipart("/api/v1/tasks/extract").file(emptyFile))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("File cannot be empty."));
+        mockMvc.perform(multipart("/api/v1/tasks/extract").file(emptyFile)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.error").value("File cannot be empty."));
     }
 
     @Test
     void extractTasksFromFile_shouldReturnUnsupportedMediaType_whenServiceThrows() throws Exception {
         // ARRANGE
-        var unsupportedFile = new MockMultipartFile(
-                "file",
-                "test.jpg",
-                "image/jpeg",
-                "image data".getBytes()
-        );
+        var unsupportedFile = new MockMultipartFile("file", "test.jpg", "image/jpeg", "image data".getBytes());
 
         // Mock the service to throw the exception our global handler expects.
-        when(parsingService.parseDocument(unsupportedFile))
-                .thenThrow(new UnsupportedFileTypeException(("Unsupported file type: image/jpeg")));
+        when(parsingService.parseDocument(unsupportedFile)).thenThrow(new UnsupportedFileTypeException(("Unsupported file type: image/jpeg")));
 
         // ACT & ASSERT
-        mockMvc.perform(multipart("/api/v1/tasks/extract").file(unsupportedFile))
-                .andExpect(status().isUnsupportedMediaType());
+        mockMvc.perform(multipart("/api/v1/tasks/extract").file(unsupportedFile)).andExpect(status().isUnsupportedMediaType());
         // A more specific test could also check the error message in the JSON body.
     }
 }

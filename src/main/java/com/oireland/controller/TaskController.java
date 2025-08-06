@@ -1,7 +1,7 @@
 package com.oireland.controller;
 
 import com.oireland.exception.InvalidLLMResponseException;
-import com.oireland.model.TaskListDTO;
+import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.service.DocumentParsingService;
 import com.oireland.service.NotionPageService;
 import com.oireland.service.TaskRouterService;
@@ -49,23 +49,19 @@ public class TaskController {
 
 //         Step 2: Extract tasks using the router
         logger.info("Step 2: Starting task extraction.");
-        TaskListDTO extractedTasks = taskRouterService.processDocument(documentText);
+        ExtractedDocDataDTO docData = taskRouterService.processDocument(documentText);
 
-        if (extractedTasks == null || extractedTasks.tasks().isEmpty()) {
+        if (docData == null || docData.tasks().isEmpty()) {
             logger.info("Extraction complete. No tasks found to create in Notion.");
             return ResponseEntity.ok(Map.of("message", "No tasks found to create in Notion."));
         }
 
-        logger.info("Extraction complete. Found {} tasks to create in Notion.", extractedTasks.tasks().size());
+        logger.info("Extraction complete. Found {} tasks to create in Notion.", docData.tasks().size());
 
-        extractedTasks.tasks().forEach(task -> logger.debug("Extracted task: '{}', Status: '{}', Description: '{}'", task.taskName(), task.status(), task.description()));
-
-
-//        saveTasksToFile(extractedTasks);
 
         // Step 3: Create pages in Notion using the dedicated service
-        logger.info("Step 3: Passing {} extracted tasks to Notion page service.", extractedTasks.tasks().size());
-        notionPageService.createPagesFromTasks(extractedTasks.tasks());
+        logger.info("Step 3: Passing {} extracted tasks to Notion page service.", docData.tasks().size());
+        notionPageService.createTasksPage(docData);
 
         logger.info("Document processing complete.");
 
