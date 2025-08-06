@@ -1,8 +1,10 @@
 package com.oireland.service;
 
+import com.oireland.exception.UnsupportedFileTypeException;
 import com.oireland.parser.DocumentParser;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -20,7 +22,7 @@ public class DocumentParsingService {
         DocumentParser appropriateParser = parsers.stream()
                 .filter(p -> p.supports(mimeType))
                 .findFirst()
-                .orElseThrow(() -> new UnsupportedOperationException("File type not supported: " + mimeType));
+                .orElseThrow(() -> new UnsupportedFileTypeException("File type not supported: " + mimeType));
 
         return appropriateParser.parse(file);
     }
