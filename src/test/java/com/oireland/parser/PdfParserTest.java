@@ -32,6 +32,8 @@ class PdfParserTest {
         assertThat(text).contains("This is a PDF document.");
     }
 
+
+
     @Test
     void supports_shouldReturnTrueForPdfMimeType() {
         assertThat(pdfParser.supports("application/pdf")).isTrue();

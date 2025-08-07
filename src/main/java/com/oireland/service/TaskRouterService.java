@@ -35,6 +35,8 @@ public class TaskRouterService {
             chosenPrompt = String.format(promptFactory.generalTaskPromptTemplate, documentText);
         }
 
+//        return new ExtractedDocDataDTO("Extracted Tasks", "Not Started", "GRRRRRRRRRRRRR", List.of("1. Make it work", "2. Cry"));
+
         // Call the client with the selected, formatted prompt
         return llmService.executePrompt(chosenPrompt, ExtractedDocDataDTO.class);
     }
