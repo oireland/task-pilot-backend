@@ -1,7 +1,7 @@
 package com.oireland.service;
 
+import com.oireland.dto.ExtractedDocDataDTO;
 import com.oireland.exception.InvalidLLMResponseException;
-import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.prompt.PromptFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

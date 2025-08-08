@@ -2,8 +2,8 @@ package com.oireland.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.NotionApiConfig;
-import com.oireland.model.ExtractedDocDataDTO;
-import com.oireland.model.NotionApiV1;
+import com.oireland.dto.ExtractedDocDataDTO;
+import com.oireland.dto.NotionApiV1;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;

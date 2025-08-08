@@ -2,8 +2,8 @@ package com.oireland.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oireland.config.HuggingFaceApiConfig;
+import com.oireland.dto.ExtractedDocDataDTO;
 import com.oireland.exception.InvalidLLMResponseException;
-import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.service.HuggingFaceService;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -19,7 +19,7 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class HuggingFaceServiceTest {
+public class HuggingFaceClientTest {
 
     private static MockWebServer mockWebServer;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -48,28 +48,23 @@ public class HuggingFaceServiceTest {
     void executePrompt_shouldReturnDeserializedObject_whenApiSucceeds() throws InterruptedException, InvalidLLMResponseException {
         // 1. ARRANGE
         String mockApiResponse = """
+        {
+            "id": "chatcmpl-123",
+            "object": "chat.completion",
+            "created": 1677858242,
+            "model": "moonshotai/Kimi-K2-Instruct",
+            "choices": [
                 {
-                    "id": "chatcmpl-123",
-                    "object": "chat.completion",
-                    "created": 1677858242,
-                    "model": "mistralai/Mistral-7B-Instruct-v0.2",
-                    "choices": [
-                        {
-                            "message": {
-                                "role": "assistant",
-                                "content": {
-                                    "Title": "Test Document",
-                                    "Status": "In Progress",
-                                    "Description": "This is a test description",
-                                    "Tasks": ["Test Exercise 1"]
-                                }
-                            },
-                            "index": 0,
-                            "finish_reason": "stop"
-                        }
-                    ]
+                    "message": {
+                        "role": "assistant",
+                        "content": "{\\"Title\\": \\"Test Document\\", \\"Status\\": \\"In Progress\\", \\"Description\\": \\"This is a test description\\", \\"Tasks\\": [\\"Test Exercise 1\\"]}"
+                    },
+                    "index": 0,
+                    "finish_reason": "stop"
                 }
-                """;
+            ]
+        }
+        """;
         mockWebServer.enqueue(new MockResponse()
                 .setBody(mockApiResponse)
                 .addHeader("Content-Type", "application/json"));

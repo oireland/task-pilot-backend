@@ -1,8 +1,8 @@
 package com.oireland.client;
 
 import com.oireland.config.NotionApiConfig;
-import com.oireland.model.ExtractedDocDataDTO;
-import com.oireland.model.NotionApiV1;
+import com.oireland.dto.ExtractedDocDataDTO;
+import com.oireland.dto.NotionApiV1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;

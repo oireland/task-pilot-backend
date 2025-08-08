@@ -1,7 +1,7 @@
 package com.oireland.controller;
 
+import com.oireland.dto.ExtractedDocDataDTO;
 import com.oireland.exception.UnsupportedFileTypeException;
-import com.oireland.model.ExtractedDocDataDTO;
 import com.oireland.service.DocumentParsingService;
 import com.oireland.service.NotionPageService;
 import com.oireland.service.TaskRouterService;

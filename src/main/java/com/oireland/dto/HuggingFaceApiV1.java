@@ -1,4 +1,4 @@
-package com.oireland.model;
+package com.oireland.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

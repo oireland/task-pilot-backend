@@ -1,7 +1,7 @@
 package com.oireland.client;
 
 import com.oireland.config.HuggingFaceApiConfig;
-import com.oireland.model.HuggingFaceApiV1;
+import com.oireland.dto.HuggingFaceApiV1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;

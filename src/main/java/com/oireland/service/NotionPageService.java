@@ -1,7 +1,7 @@
 package com.oireland.service;
 
 import com.oireland.client.NotionClient;
-import com.oireland.model.ExtractedDocDataDTO;
+import com.oireland.dto.ExtractedDocDataDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
