@@ -40,11 +40,6 @@ public class TaskController {
         this.promptFactory = promptFactory;
     }
 
-    @GetMapping
-    public ResponseEntity<String> getWelcomeMessage() {
-        return ResponseEntity.ok("Welcome to the Task Extraction API! Use POST /api/v1/tasks/extract to upload a document.");
-    }
-
     @PostMapping(value = "/parseWithEquations", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> parseDocumentWithEquations(@RequestParam("file") MultipartFile file) throws IOException, InvalidLLMResponseException {
         logger.debug("Received request to /parseWithEquations endpoint with file: {}", file.getOriginalFilename());
