@@ -4,7 +4,7 @@ import com.oireland.dto.LoginUserDTO;
 import com.oireland.dto.RegisterUserDTO;
 import com.oireland.dto.VerifyUserDTO;
 import com.oireland.model.User;
-import com.oireland.responses.LoginResponse;
+import com.oireland.response.LoginResponse;
 import com.oireland.service.AuthenticationService;
 import com.oireland.service.JwtService;
 import org.springframework.http.ResponseEntity;

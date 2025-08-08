@@ -112,9 +112,15 @@ public class User implements UserDetails {
         this.id = id;
     }
 
+
+    // We are using email address for signing in, so this method needs to return the email even though it's called getUsername
     @Override
     public String getUsername() {
-        return username;
+        return email;
+    }
+
+    public String getDisplayUsername() {
+        return this.username;
     }
 
     public void setUsername(String username) {

@@ -1,4 +1,4 @@
-package com.oireland.responses;
+package com.oireland.response;
 
 public class LoginResponse {
     private String token;
