@@ -50,7 +50,7 @@ public class AuthenticationService {
         return user;
     }
 
-    public void verifyUser(VerifyUserDTO input) {
+    public User verifyUser(VerifyUserDTO input) {
         Optional<User> optionalUser = userRepository.findByEmail(input.email());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
@@ -62,6 +62,7 @@ public class AuthenticationService {
                 user.setVerificationCode(null);
                 user.setVerificationCodeExpiresAt(null);
                 userRepository.save(user);
+                return user; // Return the user object
             } else {
                 throw new RuntimeException("Invalid verification code");
             }

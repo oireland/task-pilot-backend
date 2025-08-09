@@ -43,7 +43,9 @@ public class UserController {
                 currentUser.getEmail(),
                 currentUser.isEnabled(),
                 currentUser.getNotionWorkspaceName(),
-                currentUser.getNotionWorkspaceIcon()
+                currentUser.getNotionWorkspaceIcon(),
+                currentUser.getNotionTargetDatabaseId(),
+                currentUser.getNotionTargetDatabaseName()
         );
 
         return ResponseEntity.ok(userDTO);

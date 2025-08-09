@@ -9,15 +9,19 @@ public class UserDTO {
     private boolean enabled;
     private String notionWorkspaceName;
     private String notionWorkspaceIcon;
+    private String notionTargetDatabaseId;
+    private String notionTargetDatabaseName;
 
     // Constructors, Getters, and Setters
 
-    public UserDTO(Long id, String email, boolean enabled, String notionWorkspaceName, String notionWorkspaceIcon) {
+    public UserDTO(Long id, String email, boolean enabled, String notionWorkspaceName, String notionWorkspaceIcon, String notionTargetDatabaseId, String notionTargetDatabaseName) {
         this.id = id;
         this.email = email;
         this.enabled = enabled;
         this.notionWorkspaceName = notionWorkspaceName;
         this.notionWorkspaceIcon = notionWorkspaceIcon;
+        this.notionTargetDatabaseId = notionTargetDatabaseId;
+        this.notionTargetDatabaseName = notionTargetDatabaseName;
     }
 
     public Long getId() {
@@ -59,5 +63,21 @@ public class UserDTO {
 
     public void setNotionWorkspaceIcon(String notionWorkspaceIcon) {
         this.notionWorkspaceIcon = notionWorkspaceIcon;
+    }
+
+    public String getNotionTargetDatabaseId() {
+        return notionTargetDatabaseId;
+    }
+
+    public void setNotionTargetDatabaseId(String notionTargetDatabaseId) {
+        this.notionTargetDatabaseId = notionTargetDatabaseId;
+    }
+
+    public String getNotionTargetDatabaseName() {
+        return notionTargetDatabaseName;
+    }
+
+    public void setNotionTargetDatabaseName(String notionTargetDatabaseName) {
+        this.notionTargetDatabaseName = notionTargetDatabaseName;
     }
 }
