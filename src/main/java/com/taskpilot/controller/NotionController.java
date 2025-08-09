@@ -3,11 +3,14 @@
 package com.taskpilot.controller;
 
 import com.taskpilot.dto.notion.DatabaseInfoDTO;
+import com.taskpilot.dto.task.ExtractedDocDataDTO;
 import com.taskpilot.dto.user.ExchangeCodeDTO;
 import com.taskpilot.model.User;
 import com.taskpilot.service.NotionService;
 import com.taskpilot.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +26,7 @@ public class NotionController {
 
     private final NotionService notionService;
     private final UserService userService; // Assuming you have a method to find user by email
+    private final Logger logger = LoggerFactory.getLogger(NotionController.class);
 
     public NotionController(NotionService notionService, UserService userService) {
         this.notionService = notionService;
@@ -71,4 +75,25 @@ public class NotionController {
                     .body(Map.of("error", "Failed to retrieve databases."));
         }
     }
-}
+
+
+    @PostMapping("/pages")
+    public ResponseEntity<?> createNotionPage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody ExtractedDocDataDTO docData
+    ) {
+        try {
+            User currentUser = userService.findUserByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
+
+            notionService.createTasksPage(docData, currentUser);
+
+            return ResponseEntity.ok(Map.of("message", "Notion page created successfully."));
+        } catch (Exception e) {
+            logger.error("Failed to create Notion page", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to create page in Notion. " + e.getMessage()));
+        }
+    }
+
+    }

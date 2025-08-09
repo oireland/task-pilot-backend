@@ -36,35 +36,34 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(@Valid @RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
         User authenticatedUser = authenticationService.authenticate(loginUserDTO);
-        String jwtToken = jwtService.generateToken(authenticatedUser);
+        addCookie(response, authenticatedUser);
 
-        // Create the cookie
-        Cookie cookie = new Cookie("task_pilot_auth_token", jwtToken);
-        cookie.setHttpOnly(true); // Prevents access from JavaScript
-        cookie.setPath("/"); // Makes the cookie available for all paths
-        cookie.setMaxAge((int) (jwtService.getExpirationTime() / 1000)); // Set cookie expiration in seconds
-        cookie.setAttribute("SameSite", "Lax");
-
-        // Only set the 'Secure' flag if we are NOT in the 'dev' profile
-        if (!"dev".equals(activeProfile)) {
-            cookie.setSecure(true); // Ensures the cookie is sent only over HTTPS
-        }
-
-        // Add the cookie to the response
-        response.addCookie(cookie);
-
-        // Return a success message or the user object (without the token)
         return ResponseEntity.ok("Login successful");
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyUser(@Valid @RequestBody VerifyUserDTO verifyUserDTO) {
+    public ResponseEntity<?> verifyUser(@Valid @RequestBody VerifyUserDTO verifyUserDTO, HttpServletResponse httpServletResponse) {
         try {
-            authenticationService.verifyUser(verifyUserDTO);
+            User verifiedUser = authenticationService.verifyUser(verifyUserDTO);
+            addCookie(httpServletResponse, verifiedUser);
             return ResponseEntity.ok("Account verified successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    private void addCookie(HttpServletResponse httpServletResponse, User verifiedUser) {
+        String jwtToken = jwtService.generateToken(verifiedUser);
+
+        Cookie cookie = new Cookie("task_pilot_auth_token", jwtToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (jwtService.getExpirationTime() / 1000));
+        cookie.setAttribute("SameSite", "Lax");
+        if (!"dev".equals(activeProfile)) {
+            cookie.setSecure(true);
+        }
+        httpServletResponse.addCookie(cookie);
     }
 
     @PostMapping("/verify/resend")
