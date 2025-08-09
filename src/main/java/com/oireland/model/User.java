@@ -20,9 +20,6 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String username;
-
-    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -74,8 +71,7 @@ public class User implements UserDetails {
     /**
      * Constructor for creating a new, unverified user.
      */
-    public User(String username, String email, String password) {
-        this.username = username;
+    public User(String email, String password) {
         this.email = email;
         this.password = password;
         this.enabled = false; // A new user should start as not enabled
@@ -117,14 +113,6 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
-    }
-
-    public String getDisplayUsername() {
-        return this.username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getEmail() {

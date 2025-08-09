@@ -1,7 +1,9 @@
 package com.oireland.service;
 
+import com.oireland.exception.InvalidLLMResponseException;
 import com.oireland.exception.UnsupportedFileTypeException;
 import com.oireland.parser.DocumentParser;
+import com.oireland.parser.EquationParser;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,9 +17,16 @@ public class DocumentParsingService {
     // Spring automatically injects all beans that implement the DocumentParser interface.
     public DocumentParsingService(List<DocumentParser> parsers) {
         this.parsers = parsers;
+
     }
 
-    public String parseDocument(MultipartFile file) throws IOException {
+    public String parseDocument(MultipartFile file, boolean hasEquations) throws IOException, InvalidLLMResponseException {
+        if (hasEquations) {
+            DocumentParser parser = parsers.stream().filter(p -> p.getClass().equals(EquationParser.class)).findFirst().orElseThrow(() -> new RuntimeException("EquationParser component was not found"));
+            return parser.parse(file);
+
+        }
+
         String mimeType = file.getContentType();
         DocumentParser appropriateParser = parsers.stream()
                 .filter(p -> p.supports(mimeType))
@@ -26,4 +35,5 @@ public class DocumentParsingService {
 
         return appropriateParser.parse(file);
     }
+
 }

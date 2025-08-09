@@ -2,23 +2,18 @@ package com.oireland.controller;
 
 import com.oireland.dto.ExtractedDocDataDTO;
 import com.oireland.exception.InvalidLLMResponseException;
-import com.oireland.prompt.PromptFactory;
 import com.oireland.service.DocumentParsingService;
 import com.oireland.service.NotionPageService;
 import com.oireland.service.TaskRouterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -28,44 +23,18 @@ public class TaskController {
     private final DocumentParsingService parsingService;
     private final TaskRouterService taskRouterService;
     private final NotionPageService notionPageService;
-    private final ChatClient chatClient;
-    private final PromptFactory promptFactory;
 
 
-    public TaskController(DocumentParsingService parsingService, TaskRouterService taskRouterService, NotionPageService notionPageService, ChatClient.Builder builder, PromptFactory promptFactory) {
+    public TaskController(DocumentParsingService parsingService, TaskRouterService taskRouterService, NotionPageService notionPageService) {
         this.parsingService = parsingService;
         this.taskRouterService = taskRouterService;
         this.notionPageService = notionPageService;
-        this.chatClient = builder.build();
-        this.promptFactory = promptFactory;
-    }
 
-    @PostMapping(value = "/parseWithEquations", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> parseDocumentWithEquations(@RequestParam("file") MultipartFile file) throws IOException, InvalidLLMResponseException {
-        logger.debug("Received request to /parseWithEquations endpoint with file: {}", file.getOriginalFilename());
-
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "File cannot be empty."));
-        }
-
-        ByteArrayResource fileResource = new ByteArrayResource(file.getBytes());
-
-
-        String response = chatClient.prompt()
-                .user(u -> u.text(promptFactory.pdfTextAndMathExtractor)
-                            .media(MimeType.valueOf(Objects.requireNonNull(file.getContentType())), fileResource)).call().content();
-
-        if (response == null) {
-            throw new InvalidLLMResponseException("Received empty response from the LLM.");
-        }
-
-        // Return the processed response
-        return ResponseEntity.ok(Map.of("documentText", response));
     }
 
     @PostMapping(value = "/parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> parseDocument(@RequestParam("file") MultipartFile file) throws IOException {
-        logger.debug("Received request to /extract endpoint with file: {}", file.getOriginalFilename());
+    public ResponseEntity<?> parseDocument(@RequestParam("file") MultipartFile file, @RequestParam(value = "equations", defaultValue = "false") boolean hasEquations) throws IOException, InvalidLLMResponseException {
+        logger.debug("Received request to /parse endpoint with file: {}", file.getOriginalFilename());
 
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "File cannot be empty."));
@@ -73,7 +42,7 @@ public class TaskController {
 
         // Step 1: Parse the document to get plaintext
         logger.info("Step 1: Parsing document '{}' with content type '{}'.", file.getOriginalFilename(), file.getContentType());
-        String documentText = parsingService.parseDocument(file);
+        String documentText = parsingService.parseDocument(file, hasEquations);
 
         logger.info("Parsed document text: {}", documentText.substring(0, Math.min(documentText.length(), 100)) + "...");
         if (documentText.isEmpty()) {

@@ -5,17 +5,17 @@ package com.oireland.dto;
 public class UserDTO {
 
     private Long id;
-    private String username;
     private String email;
+    private boolean enabled;
     private String notionWorkspaceName;
     private String notionWorkspaceIcon;
 
     // Constructors, Getters, and Setters
 
-    public UserDTO(Long id, String username, String email, String notionWorkspaceName, String notionWorkspaceIcon) {
+    public UserDTO(Long id, String email, boolean enabled, String notionWorkspaceName, String notionWorkspaceIcon) {
         this.id = id;
-        this.username = username;
         this.email = email;
+        this.enabled = enabled;
         this.notionWorkspaceName = notionWorkspaceName;
         this.notionWorkspaceIcon = notionWorkspaceIcon;
     }
@@ -28,13 +28,6 @@ public class UserDTO {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getEmail() {
         return email;
@@ -42,6 +35,14 @@ public class UserDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public String getNotionWorkspaceName() {

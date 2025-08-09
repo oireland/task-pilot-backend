@@ -28,8 +28,8 @@ public class UserController {
         // Map the User entity to a safe UserDTO
         UserDTO userDTO = new UserDTO(
                 currentUser.getId(),
-                currentUser.getDisplayUsername(),
                 currentUser.getEmail(),
+                currentUser.isEnabled(),
                 currentUser.getNotionWorkspaceName(),
                 currentUser.getNotionWorkspaceIcon()
         );

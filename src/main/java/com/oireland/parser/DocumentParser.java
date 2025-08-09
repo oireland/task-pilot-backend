@@ -1,6 +1,8 @@
 package com.oireland.parser;
 
+import com.oireland.exception.InvalidLLMResponseException;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 
 public interface DocumentParser {
@@ -17,5 +19,5 @@ public interface DocumentParser {
      * @return A string containing the plaintext content of the file.
      * @throws IOException if an error occurs during reading.
      */
-    String parse(MultipartFile file) throws IOException;
+    String parse(MultipartFile file) throws IOException, InvalidLLMResponseException;
 }

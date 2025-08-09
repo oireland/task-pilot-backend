@@ -69,7 +69,7 @@ class TaskControllerTest {
         // Clean up any previous test user, just in case
         userRepository.findByEmail("test.user@example.com").ifPresent(userRepository::delete);
 
-        testUser = new User("testuser", "test.user@example.com", passwordEncoder.encode("password"));
+        testUser = new User( "test.user@example.com", passwordEncoder.encode("password"));
         testUser.setEnabled(true); // Must be enabled to log in
         userRepository.save(testUser);
     }
@@ -108,7 +108,7 @@ class TaskControllerTest {
         // ARRANGE
         Cookie authCookie = getAuthCookie();
         var mockFile = new MockMultipartFile("file", "test.txt", "text/plain", "Some file content".getBytes());
-        when(parsingService.parseDocument(any(MockMultipartFile.class))).thenReturn("Parsed document text");
+        when(parsingService.parseDocument(any(MockMultipartFile.class), false)).thenReturn("Parsed document text");
 
         // ACT & ASSERT
         mockMvc.perform(multipart("/api/v1/tasks/parse").file(mockFile)
