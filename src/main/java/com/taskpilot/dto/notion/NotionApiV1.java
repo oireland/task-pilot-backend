@@ -1,73 +1,105 @@
 package com.taskpilot.dto.notion;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.taskpilot.dto.task.ExtractedDocDataDTO;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class NotionApiV1 {
-    // Inner records for building the JSON structure Notion expects
-    public record TitleProperty(String content) {
-        public Map<String, List<Map<String, Map<String, String>>>> toRequestFormat() {
-            return Map.of("title", List.of(Map.of("text", Map.of("content", content))));
-        }
-    }
 
-    public record StatusProperty(String name) {
-        public Map<String, Map<String, String>> toRequestFormat() {
-            return Map.of("status", Map.of("name", name));
-        }
-    }
+    // --- Records for Notion API JSON Structure ---
 
-    public record RichTextProperty(String content) {
-        public Map<String, List<Map<String, Map<String, String>>>> toRequestFormat() {
-            return Map.of("rich_text", List.of(Map.of("text", Map.of("content", content))));
-        }
-    }
+    // A generic block for any rich text content (text or equation)
+    @JsonInclude(JsonInclude.Include.NON_NULL) // Omit null fields from JSON
+    public record RichTextBlock(String type, TextContent text, EquationContent equation) {}
+    public record TextContent(String content) {}
+    public record EquationContent(String expression) {}
 
-    public record TodoBlock(String content, boolean checked) {
-        public Map<String, Object> toRequestFormat() {
-            return Map.of(
-                    "object", "block",
-                    "type", "to_do",
-                    "to_do", Map.of(
-                            "rich_text", List.of(Map.of("text", Map.of("content", content))),
-                            "checked", checked
-                    )
-            );
-        }
-    }
+    // Property holders for Page properties
+    public record TitleProperty(@JsonProperty("title") List<RichTextBlock> content) {}
+    public record RichTextProperty(@JsonProperty("rich_text") List<RichTextBlock> content) {}
+    public record StatusProperty(@JsonProperty("status") Status status) {}
+    public record Status(String name) {}
 
+    // Main properties object
     public record Properties(
-            @JsonProperty("Title") Map<String, List<Map<String, Map<String, String>>>> taskName,
-            @JsonProperty("Status") Map<String, Map<String, String>> status,
-            @JsonProperty("Description") Map<String, List<Map<String, Map<String, String>>>> description
+            @JsonProperty("Title") TitleProperty title,
+            @JsonProperty("Status") StatusProperty status,
+            @JsonProperty("Description") RichTextProperty description
     ) {}
 
+    // To-Do block for the page content (children)
+    public record TodoBlock(@JsonProperty("to_do") Todo todo) {
+        public String getObject() { return "block"; }
+        public String getType() { return "to_do"; }
+    }
+    public record Todo(@JsonProperty("rich_text") List<RichTextBlock> richText, boolean checked) {}
+
+    // Parent object for the page
     public record Parent(@JsonProperty("database_id") String databaseId) {}
 
+    // The final request body for creating a page
     public record PageCreateRequest(
             Parent parent,
             Properties properties,
-            List<Map<String, Object>> children
+            List<TodoBlock> children
     ) {}
 
-    // Builder method to create the request from your DTO
-    public static PageCreateRequest buildCreateTaskRequest(ExtractedDocDataDTO doc, String databaseId) {
-        var titleProp = new TitleProperty(doc.title());
-        var statusProp = new StatusProperty(doc.status());
-        var descriptionProp = new RichTextProperty(doc.description());
 
+    // --- Builder and Parser Logic ---
+
+    // Regex to find content inside (/ ... /)
+    private static final Pattern EQUATION_PATTERN = Pattern.compile("\\(/\\s*(.*?)\\s*/\\)");
+
+    /**
+     * Parses a task string and converts it into a list of Notion RichText objects.
+     * It handles both plain text and equations wrapped in (/ ... /).
+     */
+    private static List<RichTextBlock> parseTaskToRichText(String task) {
+        List<RichTextBlock> richTextList = new ArrayList<>();
+        Matcher matcher = EQUATION_PATTERN.matcher(task);
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            // Add the plain text captured before the equation
+            if (matcher.start() > lastEnd) {
+                String textSegment = task.substring(lastEnd, matcher.start());
+                richTextList.add(new RichTextBlock("text", new TextContent(textSegment), null));
+            }
+
+            // Add the equation itself from capture group 1
+            String equationExpression = matcher.group(1);
+            richTextList.add(new RichTextBlock("equation", null, new EquationContent(equationExpression)));
+
+            lastEnd = matcher.end();
+        }
+
+        // Add any remaining plain text after the last equation
+        if (lastEnd < task.length()) {
+            String remainingText = task.substring(lastEnd);
+            richTextList.add(new RichTextBlock("text", new TextContent(remainingText), null));
+        }
+
+        return richTextList;
+    }
+
+    /**
+     * Builds the final request object to create a new page in Notion.
+     */
+    public static PageCreateRequest buildCreateTaskRequest(ExtractedDocDataDTO doc, String databaseId) {
         var properties = new Properties(
-                titleProp.toRequestFormat(),
-                statusProp.toRequestFormat(),
-                descriptionProp.toRequestFormat()
+                new TitleProperty(List.of(new RichTextBlock("text", new TextContent(doc.title()), null))),
+                new StatusProperty(new Status(doc.status())),
+                new RichTextProperty(List.of(new RichTextBlock("text", new TextContent(doc.description()), null)))
         );
 
         var children = doc.tasks().stream()
-                .map(task -> new TodoBlock(task, false).toRequestFormat())
+                .map(task -> new TodoBlock(new Todo(parseTaskToRichText(task), false)))
                 .collect(Collectors.toList());
 
         var parent = new Parent(databaseId);

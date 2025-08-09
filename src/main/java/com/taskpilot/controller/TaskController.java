@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -37,10 +38,8 @@ public class TaskController {
         }
 
         // Step 1: Parse the document to get plaintext
-        logger.info("Step 1: Parsing document '{}' with content type '{}'.", file.getOriginalFilename(), file.getContentType());
         String documentText = parsingService.parseDocument(file, hasEquations);
 
-        logger.info("Parsed document text: {}", documentText.substring(0, Math.min(documentText.length(), 100)) + "...");
         if (documentText.isEmpty()) {
             logger.warn("Parsed document text is empty.");
             return ResponseEntity.badRequest().body(Map.of("error", "Parsed document text is empty. Please check the file format and content."));
@@ -51,21 +50,26 @@ public class TaskController {
 
     @PostMapping(value = "/extract", consumes = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<?> extractTasksFromFile(@RequestBody String documentText) throws InvalidLLMResponseException {
-
-//      Step 1: Extract tasks using the TaskRouterService
         logger.info("Starting task extraction.");
         ExtractedDocDataDTO docData = taskRouterService.processDocument(documentText);
 
-        if (docData == null || docData.tasks().isEmpty()) {
+        // If the LLM returns null, create a default DTO with an empty task list.
+        if (docData == null) {
             logger.info("Extraction complete. No tasks found to create in Notion.");
-            return ResponseEntity.ok(Map.of("message", "No tasks found to create in Notion."));
+            // Return a valid DTO with an empty list instead of a different object.
+            ExtractedDocDataDTO emptyDto = new ExtractedDocDataDTO("No Title Found", "Not Started", "No tasks were found in the document.", List.of());
+            return ResponseEntity.ok(emptyDto);
         }
 
-        logger.info("Extraction complete. Found {} tasks.", docData.tasks().size());
+        // Also handle the case where the DTO exists but the list is empty
+        if (docData.tasks() == null || docData.tasks().isEmpty()) {
+            logger.info("Extraction complete. Task list is empty.");
+        } else {
+            logger.info("Extraction complete. Found {} tasks.", docData.tasks().size());
+        }
 
-
-        // Return a 202 Accepted status to indicate the request has been accepted for processing.
-        return ResponseEntity.accepted().body(docData);
+        // Always return the ExtractedDocDataDTO object.
+        return ResponseEntity.ok(docData);
     }
 }
 

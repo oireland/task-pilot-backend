@@ -43,8 +43,6 @@ public class HuggingFaceClient {
                 "stream", false
         );
 
-        logger.debug("Sending request to HuggingFace API with body: {}", requestBody);
-
         return webClient
                 .post()
                 .uri("/v1/chat/completions")

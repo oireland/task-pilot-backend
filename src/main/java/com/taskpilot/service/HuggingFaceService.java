@@ -43,7 +43,6 @@ public class HuggingFaceService implements LLMService {
 
         try {
             String content = apiResponse.choices().getFirst().message().content();
-            logger.info("Raw API response content: {}", content);
             return objectMapper.readValue(content, responseType);
         } catch (JsonProcessingException e) {
             throw new InvalidLLMResponseException("Failed to parse API response content", e);
