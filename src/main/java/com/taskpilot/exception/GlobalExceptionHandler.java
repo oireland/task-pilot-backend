@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +23,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnsupportedFileType(Exception ex) {
         logger.warn("Attempted to upload an unsupported file type. Message: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(ErrorResponse.create(ex, HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported file type. Please upload a valid document format such as PDF, DOCX, or TXT."));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(Exception ex) {
+        logger.warn("Attempted to login with invalid credentials. Message: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.create(ex, HttpStatus.UNAUTHORIZED, "Invalid Email and Password"));
     }
 
     // Handles errors from corrupt files or general I/O problems during parsing
