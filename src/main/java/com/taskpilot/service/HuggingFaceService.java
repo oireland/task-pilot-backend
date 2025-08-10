@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-
-
 @Service
 public class HuggingFaceService implements LLMService {
 
@@ -24,13 +22,7 @@ public class HuggingFaceService implements LLMService {
     }
 
     /**
-     * Executes a given prompt against the Hugging Face API and deserializes the response
-     * into the provided class type.
-     *
-     * @param prompt       The full prompt string to send to the LLM.
-     * @param responseType The Class of the object to deserialize the response into.
-     * @param <T>          The generic type of the response object.
-     * @return An object of the specified responseType.
+     * Executes a given prompt against the Hugging Face API and deserializes the response.
      */
     public <T> T executePrompt(String prompt, Class<T> responseType) throws InvalidLLMResponseException {
         logger.info("Executing prompt against Hugging Face API");
@@ -42,10 +34,36 @@ public class HuggingFaceService implements LLMService {
         }
 
         try {
-            String content = apiResponse.choices().getFirst().message().content();
-            return objectMapper.readValue(content, responseType);
+            String rawContent = apiResponse.choices().getFirst().message().content();
+            logger.info("Raw API response content: {}", rawContent);
+
+            // Clean the JSON string before parsing
+            String cleanedContent = cleanLlmJsonResponse(rawContent);
+            logger.info("Cleaned API response content: {}", cleanedContent);
+
+            return objectMapper.readValue(cleanedContent, responseType);
         } catch (JsonProcessingException e) {
             throw new InvalidLLMResponseException("Failed to parse API response content", e);
         }
+    }
+
+    /**
+     * Cleans the raw JSON string from the LLM.
+     * It removes markdown code fences (```) and the optional "json" language identifier.
+     */
+    private String cleanLlmJsonResponse(String content) {
+        String cleaned = content.trim();
+
+        // First, check for and remove markdown code block fences
+        if (cleaned.startsWith("```") && cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(3, cleaned.length() - 3).trim();
+        }
+
+        // After removing fences, check for and remove the "json" prefix
+        if (cleaned.toLowerCase().startsWith("json")) {
+            cleaned = cleaned.substring(4).trim();
+        }
+
+        return cleaned;
     }
 }
