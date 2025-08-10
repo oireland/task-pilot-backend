@@ -3,7 +3,9 @@ package com.taskpilot.service;
 import com.taskpilot.dto.auth.LoginUserDTO;
 import com.taskpilot.dto.auth.RegisterUserDTO;
 import com.taskpilot.dto.auth.VerifyUserDTO;
+import com.taskpilot.model.Plan;
 import com.taskpilot.model.User;
+import com.taskpilot.repository.PlanRepository;
 import com.taskpilot.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -20,19 +23,29 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final PlanRepository planRepository;
 
-    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, EmailService emailService) {
+    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, EmailService emailService, PlanRepository planRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.emailService = emailService;
+        this.planRepository = planRepository;
     }
 
     public User signup(RegisterUserDTO input) {
-        User user = new User( input.email(), passwordEncoder.encode(input.password()));
+        User user = new User(input.email(), passwordEncoder.encode(input.password()));
         user.setVerificationCode(generateVerificationCode());
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(false);
+
+        // --- Assign Default Plan and Quota on Signup ---
+        Plan freePlan = planRepository.findByName("FREE")
+                .orElseThrow(() -> new RuntimeException("Default FREE plan not found."));
+        user.setPlan(freePlan);
+        user.setRequestsInCurrentPeriod(0);
+        user.setPlanRefreshDate(LocalDate.now().plusMonths(1)); // Set refresh for one month from now
+
         sendVerificationEmail(user);
         return userRepository.save(user);
     }

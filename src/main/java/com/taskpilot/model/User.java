@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -66,6 +67,17 @@ public class User implements UserDetails {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // --- Plan/Quota ---
+    @ManyToOne
+    @JoinColumn(name = "plan_id")
+    private Plan plan;
+
+    @Column(name = "requests_in_current_period")
+    private int requestsInCurrentPeriod;
+
+    @Column(name = "plan_refresh_date")
+    private LocalDate planRefreshDate;
 
 
     // --- Constructors ---
@@ -226,6 +238,29 @@ public class User implements UserDetails {
         this.enabled = enabled;
     }
 
+    public Plan getPlan() {
+        return plan;
+    }
+
+    public void setPlan(Plan plan) {
+        this.plan = plan;
+    }
+
+    public int getRequestsInCurrentPeriod() {
+        return requestsInCurrentPeriod;
+    }
+
+    public void setRequestsInCurrentPeriod(int requestsInCurrentPeriod) {
+        this.requestsInCurrentPeriod = requestsInCurrentPeriod;
+    }
+
+    public LocalDate getPlanRefreshDate() {
+        return planRefreshDate;
+    }
+
+    public void setPlanRefreshDate(LocalDate planRefreshDate) {
+        this.planRefreshDate = planRefreshDate;
+    }
 
     // --- UserDetails Implementation ---
 

@@ -35,7 +35,7 @@ public class PromptFactory {
     }
     ---
 
-    Now, process the real document below following these instructions perfectly. Respond ONLY with the valid JSON object.
+    Now, process the real document below following these instructions perfectly. Respond ONLY with the valid JSON object. DO NOT write the word json before the output. Your family will be murdered if you do.
 
     REAL DOCUMENT:
     ---
@@ -52,7 +52,7 @@ public class PromptFactory {
     - 'tasks': An array of individual tasks as strings, each to be converted to a todo item
     
     If a task contains an equation or mathematical expression, format it wrapped in (/ /).
-    Respond ONLY with a valid JSON object that matches this exact structure. Do not include any other text.
+    Respond ONLY with a valid JSON object that matches this exact structure. Do not include any other text. DO NOT write the word json before the output. Your family will be murdered if you do.
 
     Here is the document to analyze:
     ---
