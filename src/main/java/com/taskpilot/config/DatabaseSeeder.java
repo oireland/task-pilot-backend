@@ -18,12 +18,12 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
         // Create FREE plan if it doesn't exist
         if (planRepository.findByName("FREE").isEmpty()) {
-            planRepository.save(new Plan("FREE", 30)); // 30 requests/month
+            planRepository.save(new Plan("FREE", 30, 5)); // 30 requests/month
         }
 
         // Create PRO plan if it doesn't exist
         if (planRepository.findByName("PRO").isEmpty()) {
-            planRepository.save(new Plan("PRO", 1000)); // 1000 requests/month
+            planRepository.save(new Plan("PRO", 1000, 50)); // 1000 requests/month
         }
     }
 }

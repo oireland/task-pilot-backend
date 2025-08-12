@@ -16,16 +16,33 @@ public class Plan {
     @Column(nullable = false)
     private int requestsPerMonth;
 
-    // Default constructor for JPA
-    public Plan() {}
+    @Column(nullable = false)
+    private int requestsPerDay;
 
-    public Plan(String name, int requestsPerMonth) {
+    // Default constructor for JPA
+    public Plan() {
+    }
+
+    public Plan(String name, int requestsPerMonth, int requestsPerDay) {
         this.name = name;
         this.requestsPerMonth = requestsPerMonth;
+        this.requestsPerDay = requestsPerDay;
     }
 
     // Getters and setters
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public int getRequestsPerMonth() { return requestsPerMonth; }
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getRequestsPerMonth() {
+        return requestsPerMonth;
+    }
+
+    public int getRequestsPerDay() {
+        return requestsPerDay;
+    }
 }

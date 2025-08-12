@@ -43,7 +43,7 @@ public class AuthenticationService {
         Plan freePlan = planRepository.findByName("FREE")
                 .orElseThrow(() -> new RuntimeException("Default FREE plan not found."));
         user.setPlan(freePlan);
-        user.setRequestsInCurrentPeriod(0);
+        user.setRequestsInCurrentMonth(0);
         user.setPlanRefreshDate(LocalDate.now().plusMonths(1)); // Set refresh for one month from now
 
         sendVerificationEmail(user);

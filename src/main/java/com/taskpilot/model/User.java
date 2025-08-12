@@ -73,11 +73,14 @@ public class User implements UserDetails {
     @JoinColumn(name = "plan_id")
     private Plan plan;
 
-    @Column(name = "requests_in_current_period")
-    private int requestsInCurrentPeriod;
+    @Column(name = "requests_in_current_month")
+    private int requestsInCurrentMonth;
 
     @Column(name = "plan_refresh_date")
     private LocalDate planRefreshDate;
+
+    @Column(name = "requests_in_current_day")
+    private int requestsInCurrentDay;
 
 
     // --- Constructors ---
@@ -246,12 +249,20 @@ public class User implements UserDetails {
         this.plan = plan;
     }
 
-    public int getRequestsInCurrentPeriod() {
-        return requestsInCurrentPeriod;
+    public int getRequestsInCurrentMonth() {
+        return requestsInCurrentMonth;
     }
 
-    public void setRequestsInCurrentPeriod(int requestsInCurrentPeriod) {
-        this.requestsInCurrentPeriod = requestsInCurrentPeriod;
+    public void setRequestsInCurrentMonth(int requestsInCurrentPeriod) {
+        this.requestsInCurrentMonth = requestsInCurrentPeriod;
+    }
+
+    public int getRequestsInCurrentDay() {
+        return requestsInCurrentDay;
+    }
+
+    public void setRequestsInCurrentDay(int requestsInCurrentDay) {
+        this.requestsInCurrentDay = requestsInCurrentDay;
     }
 
     public LocalDate getPlanRefreshDate() {

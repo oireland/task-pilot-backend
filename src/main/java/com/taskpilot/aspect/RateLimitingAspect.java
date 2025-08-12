@@ -25,7 +25,7 @@ public class RateLimitingAspect {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!rateLimitingService.isRequestAllowed(currentUser)) {
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "You have exceeded your monthly request limit.");
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "You have exceeded either your daily or monthly request limit.");
         }
     }
 }

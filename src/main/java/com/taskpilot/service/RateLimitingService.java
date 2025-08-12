@@ -16,14 +16,18 @@ public class RateLimitingService {
 
     @Transactional
     public boolean isRequestAllowed(User user) {
-        // Check if current usage is less than the plan's limit
-        if (user.getRequestsInCurrentPeriod() < user.getPlan().getRequestsPerMonth()) {
-            // Increment the usage count
-            user.setRequestsInCurrentPeriod(user.getRequestsInCurrentPeriod() + 1);
+        // Check both daily and monthly limits
+        boolean underDailyLimit = user.getRequestsInCurrentDay() < user.getPlan().getRequestsPerDay();
+        boolean underMonthlyLimit = user.getRequestsInCurrentMonth() < user.getPlan().getRequestsPerMonth();
+
+        if (underDailyLimit && underMonthlyLimit) {
+            // Increment both usage counts
+            user.setRequestsInCurrentDay(user.getRequestsInCurrentDay() + 1);
+            user.setRequestsInCurrentMonth(user.getRequestsInCurrentMonth() + 1);
             userRepository.save(user);
             return true;
         }
-        // If usage has reached the limit, deny the request
+
         return false;
     }
 }

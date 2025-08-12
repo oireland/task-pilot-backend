@@ -35,11 +35,9 @@ public class HuggingFaceService implements LLMService {
 
         try {
             String rawContent = apiResponse.choices().getFirst().message().content();
-            logger.info("Raw API response content: {}", rawContent);
 
             // Clean the JSON string before parsing
             String cleanedContent = cleanLlmJsonResponse(rawContent);
-            logger.info("Cleaned API response content: {}", cleanedContent);
 
             return objectMapper.readValue(cleanedContent, responseType);
         } catch (JsonProcessingException e) {

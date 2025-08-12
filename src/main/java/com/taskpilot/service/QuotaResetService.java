@@ -32,15 +32,20 @@ public class QuotaResetService {
         LocalDate today = LocalDate.now();
         logger.info("Running daily quota reset job for date: {}", today);
 
-        // This requires adding a new method to your UserRepository
+        // Reset daily quotas
+        int dailyResetCount = userRepository.resetAllDailyCounts();
+        logger.info("Reset daily request count for {} users.", dailyResetCount);
+
+        // Reset monthly quota for relevant users
         List<User> usersToReset = userRepository.findByPlanRefreshDateBefore(today);
 
         for (User user : usersToReset) {
-            user.setRequestsInCurrentPeriod(0);
+            user.setRequestsInCurrentMonth(0);
             user.setPlanRefreshDate(today.plusMonths(1)); // Schedule next reset
             userRepository.save(user);
-            logger.info("Reset quota for user: {}. Next reset: {}", user.getEmail(), user.getPlanRefreshDate());
+            logger.info("Reset monthly quota for user: {}. Next reset: {}", user.getEmail(), user.getPlanRefreshDate());
         }
+
 
         logger.info("Finished daily quota reset job. Reset {} users.", usersToReset.size());
     }
