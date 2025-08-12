@@ -53,7 +53,7 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         // Configure CORS settings here if needed
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://taskpilotv1.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
