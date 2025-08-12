@@ -33,23 +33,24 @@ public class UserController {
      */
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser() {
-        // The Authentication object is populated by the JwtAuthenticationFilter
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
 
-        // Map the User entity to a safe UserDTO
         UserDTO userDTO = new UserDTO(
                 currentUser.getId(),
                 currentUser.getEmail(),
                 currentUser.isEnabled(),
                 currentUser.getNotionWorkspaceName(),
                 currentUser.getNotionWorkspaceIcon(),
-                currentUser.getNotionTargetDatabaseId(),
-                currentUser.getNotionTargetDatabaseName()
+                // Add the new usage fields
+                currentUser.getRequestsInCurrentDay(),
+                currentUser.getRequestsInCurrentMonth(),
+                currentUser.getPlanRefreshDate()
         );
 
         return ResponseEntity.ok(userDTO);
     }
+
 
     @GetMapping("/enabled/{email}")
     public ResponseEntity<?> getUserEnabled(@PathVariable String email) {
