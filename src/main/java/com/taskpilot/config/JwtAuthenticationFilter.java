@@ -3,7 +3,6 @@ package com.taskpilot.config;
 import com.taskpilot.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
@@ -18,7 +17,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -34,21 +32,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String jwt = null;
-        if (request.getCookies() != null) {
-            jwt = Arrays.stream(request.getCookies())
-                    .filter(cookie -> "task_pilot_auth_token".equals(cookie.getName()))
-                    .map(Cookie::getValue)
-                    .findFirst()
-                    .orElse(null);
-        }
+        final String authHeader = request.getHeader("Authorization");
 
-        if (jwt == null) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
+            final String jwt = authHeader.substring(7);
             final String userEmail = jwtService.extractUsername(jwt);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

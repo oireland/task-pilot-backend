@@ -1,15 +1,13 @@
 package com.taskpilot.controller;
 
+import com.taskpilot.dto.auth.LoginResponseDTO;
 import com.taskpilot.dto.auth.LoginUserDTO;
 import com.taskpilot.dto.auth.RegisterUserDTO;
 import com.taskpilot.dto.auth.VerifyUserDTO;
 import com.taskpilot.model.User;
 import com.taskpilot.service.AuthenticationService;
 import com.taskpilot.service.JwtService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
     private final JwtService jwtService;
     private final AuthenticationService authenticationService;
-
-    @Value("${spring.profiles.active:dev}")
-    private String activeProfile;
 
     public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService) {
         this.jwtService = jwtService;
@@ -34,53 +29,28 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@Valid @RequestBody LoginUserDTO loginUserDTO, HttpServletResponse response) {
+    public ResponseEntity<LoginResponseDTO> authenticate(@Valid @RequestBody LoginUserDTO loginUserDTO) {
         User authenticatedUser = authenticationService.authenticate(loginUserDTO);
-        addCookie(response, authenticatedUser);
-
-        return ResponseEntity.ok("Login successful");
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // Create a cookie with the same name that is immediately expired.
-        Cookie cookie = new Cookie("task_pilot_auth_token", null);
-        cookie.setMaxAge(0); // This tells the browser to delete the cookie
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-
-        // Add the cookie to the response
-        response.addCookie(cookie);
-
-        return ResponseEntity.ok("Logout successful");
+        String jwtToken = jwtService.generateToken(authenticatedUser);
+        return ResponseEntity.ok(new LoginResponseDTO(jwtToken));
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyUser(@Valid @RequestBody VerifyUserDTO verifyUserDTO, HttpServletResponse httpServletResponse) {
+    public ResponseEntity<?> verifyUser(@Valid @RequestBody VerifyUserDTO verifyUserDTO) {
         try {
             User verifiedUser = authenticationService.verifyUser(verifyUserDTO);
-            addCookie(httpServletResponse, verifiedUser);
-            return ResponseEntity.ok("Account verified successfully");
+            String jwtToken = jwtService.generateToken(verifiedUser);
+            return ResponseEntity.ok(new LoginResponseDTO(jwtToken));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    private void addCookie(HttpServletResponse response, User user) {
-        String jwtToken = jwtService.generateToken(user);
-        Cookie cookie = new Cookie("task_pilot_auth_token", jwtToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge((int) (jwtService.getExpirationTime() / 1000));
-
-        if (!"dev".equals(activeProfile)) {
-            cookie.setSecure(true); // Required for SameSite=None
-            cookie.setAttribute("SameSite", "None");
-        } else {
-            cookie.setAttribute("SameSite", "Lax");
-        }
-
-        response.addCookie(cookie);
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // For token-based auth, logout is handled client-side.
+        // This endpoint can remain for semantic purposes.
+        return ResponseEntity.ok("Logout successful");
     }
 
     @PostMapping("/verify/resend")
