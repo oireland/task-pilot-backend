@@ -41,6 +41,20 @@ public class AuthenticationController {
         return ResponseEntity.ok("Login successful");
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // Create a cookie with the same name that is immediately expired.
+        Cookie cookie = new Cookie("task_pilot_auth_token", null);
+        cookie.setMaxAge(0); // This tells the browser to delete the cookie
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+
+        // Add the cookie to the response
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok("Logout successful");
+    }
+
     @PostMapping("/verify")
     public ResponseEntity<?> verifyUser(@Valid @RequestBody VerifyUserDTO verifyUserDTO, HttpServletResponse httpServletResponse) {
         try {
