@@ -3,6 +3,7 @@ package com.taskpilot.config;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
@@ -14,6 +15,7 @@ import java.net.URISyntaxException;
 public class DataSourceConfig {
 
     @Bean
+    @Primary
     public DataSource dataSource() throws URISyntaxException {
         // Heroku provides the database connection details in a single URL
         String databaseUrl = System.getenv("DATABASE_URL");
