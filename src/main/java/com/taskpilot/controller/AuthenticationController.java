@@ -52,18 +52,21 @@ public class AuthenticationController {
         }
     }
 
-    private void addCookie(HttpServletResponse httpServletResponse, User verifiedUser) {
-        String jwtToken = jwtService.generateToken(verifiedUser);
-
+    private void addCookie(HttpServletResponse response, User user) {
+        String jwtToken = jwtService.generateToken(user);
         Cookie cookie = new Cookie("task_pilot_auth_token", jwtToken);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge((int) (jwtService.getExpirationTime() / 1000));
-        cookie.setAttribute("SameSite", "Lax");
+
         if (!"dev".equals(activeProfile)) {
-            cookie.setSecure(true);
+            cookie.setSecure(true); // Required for SameSite=None
+            cookie.setAttribute("SameSite", "None");
+        } else {
+            cookie.setAttribute("SameSite", "Lax");
         }
-        httpServletResponse.addCookie(cookie);
+
+        response.addCookie(cookie);
     }
 
     @PostMapping("/verify/resend")
