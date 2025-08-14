@@ -154,15 +154,15 @@ public class NotionService {
                     .toBodilessEntity()
                     .block();
         } catch (WebClientResponseException e) {
-            String responseBody = e.getResponseBodyAsString();
-            logger.info("Response body from notion is {}", responseBody);
-            // Check if the error is about a missing property (like "Status" or "Description")
-            if (responseBody.contains("Unsaved transactions")) {
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                // Log the actual error from Notion for debugging purposes
+                logger.error("Notion API validation error: {}", e.getResponseBodyAsString());
+
                 throw new InvalidDatabaseSchemaException(
-                        "The selected Notion database is missing required properties. Please ensure it has 'Status' and 'Description' columns."
+                        "The selected Notion database has an invalid schema. Please ensure it has 'Title', 'Status', and 'Description' properties."
                 );
             }
-            // Re-throw other errors
+            // Re-throw any other client errors
             throw e;
         }
     }
