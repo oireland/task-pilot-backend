@@ -46,13 +46,6 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // For token-based auth, logout is handled client-side.
-        // This endpoint can remain for semantic purposes.
-        return ResponseEntity.ok("Logout successful");
-    }
-
     @PostMapping("/verify/resend")
     public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
         try {
