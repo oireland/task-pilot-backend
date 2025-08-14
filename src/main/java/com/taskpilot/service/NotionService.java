@@ -7,6 +7,7 @@ import com.taskpilot.dto.notion.NotionApiV1;
 import com.taskpilot.dto.notion.NotionSearchResponse;
 import com.taskpilot.dto.notion.NotionTokenResponse;
 import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.exception.InvalidDatabaseSchemaException;
 import com.taskpilot.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -136,10 +138,7 @@ public class NotionService {
             throw new IllegalStateException("User has not selected a target Notion database.");
         }
 
-        // Build the request body using our DTO
         var requestBody = NotionApiV1.buildCreateTaskRequest(docData, databaseId);
-
-        // Create a WebClient instance for this request
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://api.notion.com")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
@@ -147,12 +146,24 @@ public class NotionService {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-        // Make the API call
-        webClient.post()
-                .uri("/v1/pages")
-                .bodyValue(requestBody)
-                .retrieve()
-                .toBodilessEntity()
-                .block(); // block() makes the reactive call synchronous
+        try {
+            webClient.post()
+                    .uri("/v1/pages")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (WebClientResponseException e) {
+            String responseBody = e.getResponseBodyAsString();
+            logger.info("Response body from notion is {}", responseBody);
+            // Check if the error is about a missing property (like "Status" or "Description")
+            if (responseBody.contains("Unsaved transactions")) {
+                throw new InvalidDatabaseSchemaException(
+                        "The selected Notion database is missing required properties. Please ensure it has 'Status' and 'Description' columns."
+                );
+            }
+            // Re-throw other errors
+            throw e;
+        }
     }
 }
