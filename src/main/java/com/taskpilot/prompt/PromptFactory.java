@@ -16,6 +16,8 @@ public class PromptFactory {
     5. Each exercise should be a todo item in the children array
     6. IMPORTANT: Ignore all other text, such as notes, theory, or examples
     7. If a task contains an equation or mathematical expression, format it wrapped in (/ /).
+    8. If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
+       For example, instead of this: '(/ a_n = 1/n for n<1000, 1/n² for n≥1000 /)', you must write '(/ a_n = 1/n /) for (/ n<1000, 1/n² /) for (/ n≥1000 /)'
     
     Here is a perfect example of the format:
     ---
@@ -52,7 +54,9 @@ public class PromptFactory {
     - 'tasks': An array of individual tasks as strings, each to be converted to a todo item
     
     If a task contains an equation or mathematical expression, format it wrapped in (/ /).
-    Respond ONLY with a valid JSON object that matches this exact structure. Do not include any other text. DO NOT write the word json before the output. Your family will be murdered if you do.
+    If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
+    For example, instead of this: '(/ a_n = 1/n for n<1000, 1/n² for n≥1000 /)', you must write '(/ a_n = 1/n /) for (/ n<1000, 1/n² /) for (/ n≥1000 /)'
+    Respond ONLY with a valid JSON object that matches this exact structure. Do not include any other text. DO NOT write the word json before the output.
 
     Here is the document to analyze:
     ---
