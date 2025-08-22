@@ -9,8 +9,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
+
+    /**
+     * Finds a task by its ID and owning user.
+     * This is crucial for ensuring a user can only edit their own tasks.
+     *
+     * @param taskId The ID of the task to find.
+     * @param user The user who must own the task.
+     * @return An Optional containing the task if found and owned by the user.
+     */
+    Optional<Task> findByIdAndUser(Long taskId, User user);
 
     /**
      * Deletes a task by its ID and owning user in a single query.

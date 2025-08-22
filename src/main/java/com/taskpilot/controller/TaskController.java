@@ -3,9 +3,11 @@ package com.taskpilot.controller;
 import com.taskpilot.aspect.CheckRateLimit;
 import com.taskpilot.dto.task.ExtractedDocDataDTO;
 import com.taskpilot.dto.task.TaskDTO;
+import com.taskpilot.dto.task.UpdateTaskDTO;
 import com.taskpilot.exception.InvalidLLMResponseException;
 import com.taskpilot.model.Task;
 import com.taskpilot.model.User;
+import com.taskpilot.repository.UserRepository;
 import com.taskpilot.service.DocumentParsingService;
 import com.taskpilot.service.TaskRouterService;
 import com.taskpilot.service.TaskService;
@@ -18,12 +20,14 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -33,28 +37,53 @@ public class TaskController {
     private final DocumentParsingService parsingService;
     private final TaskRouterService taskRouterService;
     private final TaskService taskService;
+    private final UserRepository userRepository;
 
-    public TaskController(DocumentParsingService parsingService, TaskRouterService taskRouterService, TaskService taskService) {
+    public TaskController(
+            DocumentParsingService parsingService,
+            TaskRouterService taskRouterService,
+            TaskService taskService,
+            UserRepository userRepository
+    ) {
         this.parsingService = parsingService;
         this.taskRouterService = taskRouterService;
         this.taskService = taskService;
+        this.userRepository = userRepository;
     }
 
     /**
      * Retrieves a paginated and searchable list of tasks for the authenticated user.
-     * This endpoint is NOT rate-limited.
+     * Defaults to sorting by the most recently updated tasks.
      */
     @GetMapping
     public ResponseEntity<Page<TaskDTO>> getUserTasks(
             Authentication authentication,
             @RequestParam(required = false) String search,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        User currentUser = (User) authentication.getPrincipal();
-        // FIX: The service now returns a Page<TaskDTO> directly, so we assign it to the correct type.
-        // This removes the need for manual mapping in the controller.
+        User currentUser = findUserByAuthentication(authentication);
         Page<TaskDTO> tasksDtoPage = taskService.getTasksForUser(currentUser, search, pageable);
         return ResponseEntity.ok(tasksDtoPage);
+    }
+
+    /**
+     * Retrieves a single task by its ID for the authenticated user.
+     *
+     * @param taskId The ID of the task to retrieve.
+     * @param authentication The security context.
+     * @return A response entity with the task DTO or 404 if not found.
+     */
+    @GetMapping("/{taskId}")
+    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long taskId, Authentication authentication) {
+        User currentUser = findUserByAuthentication(authentication);
+        logger.info("User '{}' attempting to retrieve task with id {}", currentUser.getEmail(), taskId);
+
+        return taskService.getTaskByIdForUser(taskId, currentUser)
+                .map(ResponseEntity::ok) // If present, wrap in 200 OK
+                .orElseGet(() -> {
+                    logger.warn("Failed to retrieve task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
+                    return ResponseEntity.notFound().build(); // If empty, return 404
+                });
     }
 
     /**
@@ -73,7 +102,7 @@ public class TaskController {
             return ResponseEntity.badRequest().body(Map.of("error", "File cannot be empty."));
         }
 
-        User currentUser = (User) authentication.getPrincipal();
+        User currentUser = findUserByAuthentication(authentication);
 
         logger.info("Parsing document '{}' for user '{}'", file.getOriginalFilename(), currentUser.getEmail());
         String documentText = parsingService.parseDocument(file, hasEquations);
@@ -101,12 +130,45 @@ public class TaskController {
     }
 
     /**
+     * Updates an existing task for the authenticated user.
+     * This endpoint is NOT rate-limited.
+     *
+     * @param taskId The ID of the task to update.
+     * @param updateTaskDTO The request body containing the new task data.
+     * @param authentication The security context.
+     * @return A response entity with the updated task or 404 if not found.
+     */
+    @PutMapping("/{taskId}")
+    public ResponseEntity<TaskDTO> updateTask(
+            @PathVariable Long taskId,
+            @RequestBody UpdateTaskDTO updateTaskDTO,
+            Authentication authentication) {
+
+        User currentUser = findUserByAuthentication(authentication);
+        logger.info("User '{}' attempting to update task with id {}", currentUser.getEmail(), taskId);
+
+        // Call the service to update the task
+        Optional<TaskDTO> updatedTaskOptional = taskService.updateTask(taskId, updateTaskDTO, currentUser);
+
+        // Use the Optional to build the correct response
+        return updatedTaskOptional
+                .map(dto -> {
+                    logger.info("Successfully updated task with id {}", taskId);
+                    return ResponseEntity.ok(dto); // HTTP 200 OK with updated task
+                })
+                .orElseGet(() -> {
+                    logger.warn("Failed to update task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
+                    return ResponseEntity.notFound().build(); // HTTP 404 Not Found
+                });
+    }
+
+    /**
      * Deletes a task by its ID for the authenticated user.
      * This endpoint is NOT rate-limited.
      */
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long taskId, Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
+        User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to delete task with id {}", currentUser.getEmail(), taskId);
 
         boolean deleted = taskService.deleteTask(taskId, currentUser);
@@ -130,7 +192,7 @@ public class TaskController {
      */
     @DeleteMapping("/batch")
     public ResponseEntity<Map<String, Integer>> deleteTasks(@RequestBody List<Long> taskIds, Authentication authentication) {
-        User currentUser = (User) authentication.getPrincipal();
+        User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to batch delete {} tasks.", currentUser.getEmail(), taskIds != null ? taskIds.size() : 0);
 
         if (taskIds == null || taskIds.isEmpty()) {
@@ -142,5 +204,14 @@ public class TaskController {
         logger.info("User '{}' successfully deleted {} tasks out of {} requested.", currentUser.getEmail(), deletedCount, taskIds.size());
 
         return ResponseEntity.ok(Map.of("deletedCount", deletedCount));
+    }
+
+    /**
+     * A private helper method to safely retrieve the User entity from the security context.
+     */
+    private User findUserByAuthentication(Authentication authentication) {
+        String userEmail = authentication.getName();
+        return userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user '" + userEmail + "' not found in the database."));
     }
 }

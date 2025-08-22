@@ -11,5 +11,6 @@ public record TaskDTO(
         String title,
         String description,
         List<String> items,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {}

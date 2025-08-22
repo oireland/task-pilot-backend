@@ -2,6 +2,7 @@ package com.taskpilot.service;
 
 import com.taskpilot.dto.task.ExtractedDocDataDTO;
 import com.taskpilot.dto.task.TaskDTO;
+import com.taskpilot.dto.task.UpdateTaskDTO;
 import com.taskpilot.model.Task;
 import com.taskpilot.model.User;
 import com.taskpilot.repository.TaskRepository;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TaskService {
@@ -55,6 +57,19 @@ public class TaskService {
     }
 
     /**
+     * Retrieves a single task by its ID for a specific user.
+     *
+     * @param taskId The ID of the task to retrieve.
+     * @param user The user who must own the task.
+     * @return An Optional containing the TaskDTO if found and owned by the user, otherwise an empty Optional.
+     */
+    @Transactional(readOnly = true)
+    public Optional<TaskDTO> getTaskByIdForUser(Long taskId, User user) {
+        return taskRepository.findByIdAndUser(taskId, user)
+                .map(this::convertToDto);
+    }
+
+    /**
      * Creates and saves a new task list from extracted document data.
      * @param docData The data extracted from the document.
      * @param user The user who owns the task.
@@ -69,6 +84,32 @@ public class TaskService {
         newTask.setUser(user);
         return taskRepository.save(newTask);
     }
+
+    /**
+     * Updates an existing task, ensuring it belongs to the specified user.
+     *
+     * @param taskId The ID of the task to update.
+     * @param taskData A DTO containing the new data for the task.
+     * @param user The user requesting the update.
+     * @return An Optional containing the updated TaskDTO, or an empty Optional if not found.
+     */
+    @Transactional
+    public Optional<TaskDTO> updateTask(Long taskId, UpdateTaskDTO taskData, User user) {
+        // Find the task by its ID and ensure it belongs to the current user.
+        return taskRepository.findByIdAndUser(taskId, user)
+                .map(taskToUpdate -> {
+                    // Update the entity's fields with data from the DTO
+                    taskToUpdate.setTitle(taskData.title());
+                    taskToUpdate.setDescription(taskData.description());
+                    taskToUpdate.setItems(taskData.items());
+                    // The 'updatedAt' field is handled automatically by @UpdateTimestamp
+
+                    // Save the updated entity and convert it back to a DTO
+                    Task updatedTask = taskRepository.save(taskToUpdate);
+                    return convertToDto(updatedTask);
+                });
+    }
+
 
     /**
      * Deletes a task by its ID, ensuring it belongs to the specified user.
@@ -116,7 +157,8 @@ public class TaskService {
                 task.getTitle(),
                 task.getDescription(),
                 task.getItems(),
-                task.getCreatedAt()
+                task.getCreatedAt(),
+                task.getUpdatedAt()
         );
     }
 }
