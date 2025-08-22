@@ -15,7 +15,7 @@ build.log
 ### User-specific ignores ###
 # Ignore test resources and http client file
 src/test/resources/
-test.http
+*.http
 debug
 
 ### STS ###

@@ -82,6 +82,9 @@ public class User implements UserDetails {
     @Column(name = "requests_in_current_day")
     private int requestsInCurrentDay;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks;
+
 
     // --- Constructors ---
 
@@ -116,6 +119,14 @@ public class User implements UserDetails {
 
 
     // --- Getters and Setters ---
+
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+    }
 
     public Long getId() {
         return id;
