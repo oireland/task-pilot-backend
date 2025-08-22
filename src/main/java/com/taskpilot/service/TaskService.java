@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 @Service
 public class TaskService {
 
@@ -86,6 +88,21 @@ public class TaskService {
         // If it's 0, no matching task was found (either wrong ID or wrong user),
         // and no delete operation occurred.
         return deletedRows > 0;
+    }
+
+    /**
+     * Deletes multiple tasks by a list of IDs, ensuring they belong to the specified user.
+     *
+     * @param taskIds The list of IDs for the tasks to delete.
+     * @param user The user requesting the deletion.
+     * @return The number of tasks that were actually deleted.
+     */
+    @Transactional
+    public int deleteTasks(List<Long> taskIds, User user) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            return 0;
+        }
+        return taskRepository.deleteByIdInAndUser(taskIds, user);
     }
 
     /**
