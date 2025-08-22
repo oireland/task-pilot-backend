@@ -19,8 +19,8 @@ public class RateLimitingAspect {
         this.rateLimitingService = rateLimitingService;
     }
 
-    // This expression targets all methods in your TaskController
-    @Before("execution(* com.taskpilot.controller.TaskController.*(..))")
+    // This pointcut now targets any method annotated with @CheckRateLimit
+    @Before("@annotation(com.taskpilot.aspect.CheckRateLimit)")
     public void checkRateLimit() {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
