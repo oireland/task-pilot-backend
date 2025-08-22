@@ -69,6 +69,26 @@ public class TaskService {
     }
 
     /**
+     * Deletes a task by its ID, ensuring it belongs to the specified user.
+     * This operation is performed in a single, atomic database query.
+     *
+     * @param taskId The ID of the task to delete.
+     * @param user The user requesting the deletion.
+     * @return {@code true} if a task was deleted, {@code false} otherwise.
+     */
+    @Transactional
+    public boolean deleteTask(Long taskId, User user) {
+        // This single call attempts to delete the task only if both the ID and user match.
+        // It returns the number of rows affected by the delete operation.
+        int deletedRows = taskRepository.deleteByIdAndUser(taskId, user);
+
+        // If deletedRows is 1, the task was found and deleted.
+        // If it's 0, no matching task was found (either wrong ID or wrong user),
+        // and no delete operation occurred.
+        return deletedRows > 0;
+    }
+
+    /**
      * Helper method to convert a Task entity to a TaskDTO.
      * @param task The Task entity.
      * @return The corresponding TaskDTO.
