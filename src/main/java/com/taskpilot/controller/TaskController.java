@@ -99,4 +99,24 @@ public class TaskController {
         logger.info("Extraction and saving complete. Found {} tasks.", docData.tasks().size());
         return ResponseEntity.ok(docData);
     }
+
+    /**
+     * Deletes a task by its ID for the authenticated user.
+     * This endpoint is NOT rate-limited.
+     */
+    @DeleteMapping("/{taskId}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long taskId, Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        logger.info("User '{}' attempting to delete task with id {}", currentUser.getEmail(), taskId);
+
+        boolean deleted = taskService.deleteTask(taskId, currentUser);
+
+        if (deleted) {
+            logger.info("Successfully deleted task with id {} for user '{}'", taskId, currentUser.getEmail());
+            return ResponseEntity.noContent().build(); // HTTP 204 No Content
+        } else {
+            logger.warn("Failed to delete task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
+            return ResponseEntity.notFound().build(); // HTTP 404 Not Found
+        }
+    }
 }
