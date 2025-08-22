@@ -119,4 +119,28 @@ public class TaskController {
             return ResponseEntity.notFound().build(); // HTTP 404 Not Found
         }
     }
+
+    /**
+     * Deletes multiple tasks by a list of IDs for the authenticated user.
+     * This endpoint is NOT rate-limited.
+     *
+     * @param taskIds A JSON list of task IDs to be deleted.
+     * @param authentication The security context.
+     * @return A response entity with the count of deleted tasks.
+     */
+    @DeleteMapping("/batch")
+    public ResponseEntity<Map<String, Integer>> deleteTasks(@RequestBody List<Long> taskIds, Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        logger.info("User '{}' attempting to batch delete {} tasks.", currentUser.getEmail(), taskIds != null ? taskIds.size() : 0);
+
+        if (taskIds == null || taskIds.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        int deletedCount = taskService.deleteTasks(taskIds, currentUser);
+
+        logger.info("User '{}' successfully deleted {} tasks out of {} requested.", currentUser.getEmail(), deletedCount, taskIds.size());
+
+        return ResponseEntity.ok(Map.of("deletedCount", deletedCount));
+    }
 }
