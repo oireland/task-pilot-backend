@@ -46,6 +46,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/users/enabled/**").permitAll()
+                        .requestMatchers("/api/v1/webhook/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -68,11 +69,6 @@ public class SecurityConfiguration {
         return source;
     }
 
-    /**
-     * THE KEY FIX: This creates a CorsFilter bean that uses your configuration
-     * and forces it to be the very first filter in the chain. This guarantees
-     * that CORS is handled before Spring Security even begins its authorization checks.
-     */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public CorsFilter corsFilter() {

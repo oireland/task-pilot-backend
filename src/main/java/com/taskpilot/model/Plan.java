@@ -2,6 +2,8 @@ package com.taskpilot.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "plans")
 public class Plan {
@@ -19,14 +21,24 @@ public class Plan {
     @Column(nullable = false)
     private int requestsPerDay;
 
+    /**
+     * This allows a single plan (e.g., "Pro") to be associated with
+     * multiple Stripe Price IDs (e.g., one for monthly, one for yearly).
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "plan_stripe_prices", joinColumns = @JoinColumn(name = "plan_id"))
+    @Column(name = "stripe_price_id", nullable = false)
+    private List<String> stripePriceIds;
+
     // Default constructor for JPA
     public Plan() {
     }
 
-    public Plan(String name, int requestsPerMonth, int requestsPerDay) {
+    public Plan(String name, int requestsPerMonth, int requestsPerDay, List<String> stripePriceIds) {
         this.name = name;
         this.requestsPerMonth = requestsPerMonth;
         this.requestsPerDay = requestsPerDay;
+        this.stripePriceIds = stripePriceIds;
     }
 
     // Getters and setters
@@ -44,5 +56,13 @@ public class Plan {
 
     public int getRequestsPerDay() {
         return requestsPerDay;
+    }
+
+    public List<String> getStripePriceIds() {
+        return stripePriceIds;
+    }
+
+    public void setStripePriceIds(List<String> stripePriceIds) {
+        this.stripePriceIds = stripePriceIds;
     }
 }
