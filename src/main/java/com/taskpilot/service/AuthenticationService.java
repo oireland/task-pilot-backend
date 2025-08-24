@@ -8,6 +8,7 @@ import com.taskpilot.model.User;
 import com.taskpilot.repository.PlanRepository;
 import com.taskpilot.repository.UserRepository;
 import jakarta.mail.MessagingException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +26,9 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final PlanRepository planRepository;
 
+    @Value("${plan.free.name}")
+    private String FREE_PLAN_NAME;
+
     public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, EmailService emailService, PlanRepository planRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -40,8 +44,8 @@ public class AuthenticationService {
         user.setEnabled(false);
 
         // --- Assign Default Plan and Quota on Signup ---
-        Plan freePlan = planRepository.findByName("FREE")
-                .orElseThrow(() -> new RuntimeException("Default FREE plan not found."));
+        Plan freePlan = planRepository.findByName(FREE_PLAN_NAME)
+                .orElseThrow(() -> new RuntimeException("Default Free plan not found."));
         user.setPlan(freePlan);
         user.setRequestsInCurrentMonth(0);
         user.setPlanRefreshDate(LocalDate.now().plusMonths(1)); // Set refresh for one month from now
