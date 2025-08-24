@@ -37,12 +37,14 @@ public class NotionService {
     private final RestTemplate restTemplate;
     private final UserService userService;
     private final EncryptionService encryptionService;
+    private final WebClient.Builder webClientBuilder;
     private final Logger logger = LoggerFactory.getLogger(NotionService.class);
 
-    public NotionService(UserService userService, EncryptionService encryptionService) {
+    public NotionService(UserService userService, EncryptionService encryptionService, WebClient.Builder webClientBuilder, RestTemplate restTemplate) {
         this.userService = userService;
         this.encryptionService = encryptionService;
-        this.restTemplate = new RestTemplate();
+        this.webClientBuilder = webClientBuilder;
+        this.restTemplate = restTemplate;
     }
 
     public void exchangeCodeAndSaveToken(String code, User user) {
@@ -139,7 +141,7 @@ public class NotionService {
         }
 
         var requestBody = NotionApiV1.buildCreateTaskRequest(docData, databaseId);
-        WebClient webClient = WebClient.builder()
+        WebClient webClient = webClientBuilder
                 .baseUrl("https://api.notion.com")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .defaultHeader("Notion-Version", "2022-06-28")
