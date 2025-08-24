@@ -158,8 +158,8 @@ public class TaskController {
         Task savedTask = taskService.createTask(docData, currentUser);
         logger.info("Successfully saved new task list with id {} for user '{}'", savedTask.getId(), currentUser.getEmail());
 
-        logger.info("Extraction and saving complete. Found {} tasks.", docData.tasks().size());
-        return ResponseEntity.ok(docData);
+        TaskDTO res = new TaskDTO(savedTask.getId(), savedTask.getTitle(), savedTask.getDescription(), savedTask.getItems(), savedTask.getCreatedAt(), savedTask.getUpdatedAt());
+        return ResponseEntity.ok(res);
     }
 
     /**
