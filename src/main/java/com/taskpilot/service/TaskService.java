@@ -1,6 +1,7 @@
 package com.taskpilot.service;
 
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.CreateTaskDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.dto.task.TaskDTO;
 import com.taskpilot.dto.task.UpdateTaskDTO;
 import com.taskpilot.model.Task;
@@ -76,13 +77,30 @@ public class TaskService {
      * @return The newly saved Task entity.
      */
     @Transactional
-    public Task createTask(ExtractedDocDataDTO docData, User user) {
+    public Task createTask(ExtractedTaskListDTO docData, User user) {
         Task newTask = new Task();
         newTask.setTitle(docData.title());
         newTask.setDescription(docData.description());
         newTask.setItems(docData.tasks());
         newTask.setUser(user);
         return taskRepository.save(newTask);
+    }
+
+    /**
+     * Creates and saves a new task from user-provided data.
+     * @param taskData The DTO containing the new task data.
+     * @param user The user who owns the task.
+     * @return The newly created TaskDTO.
+     */
+    @Transactional
+    public TaskDTO createTask(CreateTaskDTO taskData, User user) {
+        Task newTask = new Task();
+        newTask.setTitle(taskData.title());
+        newTask.setDescription(taskData.description());
+        newTask.setItems(taskData.items());
+        newTask.setUser(user);
+        Task savedTask = taskRepository.save(newTask);
+        return convertToDto(savedTask);
     }
 
     /**

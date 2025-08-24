@@ -2,7 +2,7 @@ package com.taskpilot.dto.notion;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,13 +88,15 @@ public final class NotionApiV1 {
         return richTextList;
     }
 
+    private static final String DEFAULT_STATUS = "Not Started";
+
     /**
      * Builds the final request object to create a new page in Notion.
      */
-    public static PageCreateRequest buildCreateTaskRequest(ExtractedDocDataDTO doc, String databaseId) {
+    public static PageCreateRequest buildCreateTaskRequest(ExtractedTaskListDTO doc, String databaseId) {
         var properties = new Properties(
                 new TitleProperty(List.of(new RichTextBlock("text", new TextContent(doc.title()), null))),
-                new StatusProperty(new Status(doc.status())),
+                new StatusProperty(new Status(DEFAULT_STATUS)),
                 new RichTextProperty(List.of(new RichTextBlock("text", new TextContent(doc.description()), null)))
         );
 
