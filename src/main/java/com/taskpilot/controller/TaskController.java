@@ -1,7 +1,8 @@
 package com.taskpilot.controller;
 
 import com.taskpilot.aspect.CheckRateLimit;
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.CreateTaskDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.dto.task.TaskDTO;
 import com.taskpilot.dto.task.UpdateTaskDTO;
 import com.taskpilot.exception.InvalidLLMResponseException;
@@ -11,6 +12,7 @@ import com.taskpilot.repository.UserRepository;
 import com.taskpilot.service.DocumentParsingService;
 import com.taskpilot.service.TaskRouterService;
 import com.taskpilot.service.TaskService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -23,8 +25,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,6 +91,35 @@ public class TaskController {
     }
 
     /**
+     * Creates a new task from user-provided data.
+     * This endpoint is NOT rate-limited.
+     *
+     * @param createTaskDTO The request body containing the new task data.
+     * @param authentication The security context.
+     * @return A response entity with the created task and a location header.
+     */
+    @PostMapping
+    public ResponseEntity<TaskDTO> createTask(
+            @Valid @RequestBody CreateTaskDTO createTaskDTO,
+            Authentication authentication) {
+        User currentUser = findUserByAuthentication(authentication);
+        logger.info("User '{}' attempting to create a new task with title '{}'", currentUser.getEmail(), createTaskDTO.title());
+
+        TaskDTO createdTask = taskService.createTask(createTaskDTO, currentUser);
+
+        logger.info("Successfully created new task with id {} for user '{}'", createdTask.id(), currentUser.getEmail());
+
+        // Build the location URI of the newly created resource
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdTask.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(createdTask);
+    }
+
+    /**
      * A single endpoint to handle file parsing, task extraction, and saving.
      * This endpoint IS rate-limited.
      */
@@ -113,11 +146,11 @@ public class TaskController {
         }
 
         logger.info("Starting task extraction from document text for user '{}'.", currentUser.getEmail());
-        ExtractedDocDataDTO docData = taskRouterService.processDocument(documentText);
+        ExtractedTaskListDTO docData = taskRouterService.processDocument(documentText);
 
         if (docData == null || docData.tasks() == null || docData.tasks().isEmpty()) {
             logger.info("Extraction complete. No tasks found for user '{}'.", currentUser.getEmail());
-            ExtractedDocDataDTO emptyDto = new ExtractedDocDataDTO("No Title Found", "Not Started", "No tasks were found in the document.", List.of());
+            ExtractedTaskListDTO emptyDto = new ExtractedTaskListDTO("No Title Found", "No tasks were found in the document.", List.of());
             return ResponseEntity.ok(emptyDto);
         }
 

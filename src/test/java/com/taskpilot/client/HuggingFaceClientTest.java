@@ -2,7 +2,7 @@ package com.taskpilot.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.HuggingFaceApiConfig;
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.exception.InvalidLLMResponseException;
 import com.taskpilot.service.HuggingFaceService;
 import okhttp3.mockwebserver.MockResponse;
@@ -57,7 +57,7 @@ public class HuggingFaceClientTest {
                 {
                     "message": {
                         "role": "assistant",
-                        "content": "{\\"Title\\": \\"Test Document\\", \\"Status\\": \\"In Progress\\", \\"Description\\": \\"This is a test description\\", \\"Tasks\\": [\\"Test Exercise 1\\"]}"
+                        "content": "{\\"Title\\": \\"Test Document\\", \\"Description\\": \\"This is a test description\\", \\"Tasks\\": [\\"Test Exercise 1\\"]}"
                     },
                     "index": 0,
                     "finish_reason": "stop"
@@ -72,12 +72,11 @@ public class HuggingFaceClientTest {
         String dummyPrompt = "This is a dummy prompt for testing.";
 
         // 2. ACT
-        ExtractedDocDataDTO result = huggingFaceService.executePrompt(dummyPrompt, ExtractedDocDataDTO.class);
+        ExtractedTaskListDTO result = huggingFaceService.executePrompt(dummyPrompt, ExtractedTaskListDTO.class);
 
         // 3. ASSERT
         assertThat(result).isNotNull();
         assertThat(result.title()).isEqualTo("Test Document");
-        assertThat(result.status()).isEqualTo("In Progress");
         assertThat(result.description()).isEqualTo("This is a test description");
         assertThat(result.tasks()).containsExactly("Test Exercise 1");
 
@@ -101,7 +100,7 @@ public class HuggingFaceClientTest {
 
         // ACT & ASSERT
         assertThrows(InvalidLLMResponseException.class, () ->
-                huggingFaceService.executePrompt("test prompt", ExtractedDocDataDTO.class)
+                huggingFaceService.executePrompt("test prompt", ExtractedTaskListDTO.class)
         );
     }
 }

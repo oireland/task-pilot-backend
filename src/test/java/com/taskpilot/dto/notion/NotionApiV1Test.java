@@ -1,6 +1,6 @@
 package com.taskpilot.dto.notion;
 
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,9 +12,8 @@ class NotionApiV1Test {
     @Test
     void buildCreateTaskRequest_shouldParseEquationsInTasksCorrectly() {
         // --- ARRANGE ---
-        var docData = new ExtractedDocDataDTO(
+        var docData = new ExtractedTaskListDTO(
                 "Math Problems",
-                "Not Started",
                 "A list of calculus exercises.",
                 List.of(
                         "1. Solve the equation (/ E = mc^2 /) for m.",

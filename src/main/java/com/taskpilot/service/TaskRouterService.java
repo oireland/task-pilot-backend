@@ -1,6 +1,6 @@
 package com.taskpilot.service;
 
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.exception.InvalidLLMResponseException;
 import com.taskpilot.prompt.PromptFactory;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ public class TaskRouterService {
         this.promptFactory = promptFactory;
     }
 
-    public ExtractedDocDataDTO processDocument(String documentText) throws InvalidLLMResponseException {
+    public ExtractedTaskListDTO processDocument(String documentText) throws InvalidLLMResponseException {
         String chosenPrompt;
 
         // The core routing logic
@@ -36,6 +36,6 @@ public class TaskRouterService {
         }
 
         // Call the client with the selected, formatted prompt
-        return llmService.executePrompt(chosenPrompt, ExtractedDocDataDTO.class);
+        return llmService.executePrompt(chosenPrompt, ExtractedTaskListDTO.class);
     }
 }

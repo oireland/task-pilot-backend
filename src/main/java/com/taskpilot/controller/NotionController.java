@@ -3,7 +3,7 @@
 package com.taskpilot.controller;
 
 import com.taskpilot.dto.notion.DatabaseInfoDTO;
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.dto.user.ExchangeCodeDTO;
 import com.taskpilot.model.User;
 import com.taskpilot.service.NotionService;
@@ -80,7 +80,7 @@ public class NotionController {
     @PostMapping("/pages")
     public ResponseEntity<?> createNotionPage(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ExtractedDocDataDTO docData
+            @RequestBody ExtractedTaskListDTO docData
     ) {
         try {
             User currentUser = userService.findUserByEmail(userDetails.getUsername())

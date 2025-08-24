@@ -6,7 +6,7 @@ import com.taskpilot.dto.notion.DatabaseInfoDTO;
 import com.taskpilot.dto.notion.NotionApiV1;
 import com.taskpilot.dto.notion.NotionSearchResponse;
 import com.taskpilot.dto.notion.NotionTokenResponse;
-import com.taskpilot.dto.task.ExtractedDocDataDTO;
+import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.exception.InvalidDatabaseSchemaException;
 import com.taskpilot.model.User;
 import org.slf4j.Logger;
@@ -130,7 +130,7 @@ public class NotionService {
         }
     }
 
-    public void createTasksPage(ExtractedDocDataDTO docData, User user) {
+    public void createTasksPage(ExtractedTaskListDTO docData, User user) {
         String accessToken = encryptionService.decrypt(user.getNotionAccessToken());
         String databaseId = user.getNotionTargetDatabaseId();
 

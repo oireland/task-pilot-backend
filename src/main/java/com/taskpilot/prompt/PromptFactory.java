@@ -11,12 +11,11 @@ public class PromptFactory {
     Follow these instructions precisely:
     1. Create ONE document that contains all exercises as a checklist
     2. The 'Title' should be determined from the title of the document if available, or else determine the nature of the exercises e.g. "Calculus Exercises".
-    3. The 'Status' MUST be "Not started"
-    4. The 'Description' should summarize the set of exercises
-    5. Each exercise should be a todo item in the children array
-    6. IMPORTANT: Ignore all other text, such as notes, theory, or examples
-    7. If a task contains an equation or mathematical expression, format it wrapped in (/ /).
-    8. If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
+    3. The 'Description' should summarize the set of exercises
+    4. Each exercise should be a todo item in the children array
+    5. IMPORTANT: Ignore all other text, such as notes, theory, or examples
+    6. If a task contains an equation or mathematical expression, format it wrapped in (/ /).
+    7. If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
        For example, instead of this: '(/ a_n = 1/n for n<1000, 1/n² for n≥1000 /)', you must write '(/ a_n = 1/n /) for (/ n<1000, 1/n² /) for (/ n≥1000 /)'
     
     Here is a perfect example of the format:
@@ -28,7 +27,6 @@ public class PromptFactory {
     YOUR JSON OUTPUT:
     {
       "title": "Calculus Exercise List",
-      "status": "Not started",
       "description": "Calculus exercises covering derivatives and integrals",
       "tasks": [
         "Exercise 3.1: Find the derivative of f(x) = x^2 * sin(x)",
@@ -49,7 +47,6 @@ public class PromptFactory {
     You are an expert project manager's assistant. Your task is to organize tasks into a single document.
     Analyze the text and create a document with the following structure:
     - 'title': A concise name for the task list, preferably derived from the document title or main topic
-    - 'status': Default to 'Not started'
     - 'description': A brief summary of the overall task list
     - 'tasks': An array of individual tasks as strings, each to be converted to a todo item
     
