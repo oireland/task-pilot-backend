@@ -9,6 +9,7 @@ public record UserDTO(
         boolean enabled,
         String notionWorkspaceName,
         String notionWorkspaceIcon,
+        String notionTargetDatabaseId,
         // Add usage stats here
         int requestsInCurrentDay,
         int requestsInCurrentMonth,

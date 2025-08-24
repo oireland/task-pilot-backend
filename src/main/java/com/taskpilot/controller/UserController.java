@@ -42,6 +42,7 @@ public class UserController {
                 currentUser.isEnabled(),
                 currentUser.getNotionWorkspaceName(),
                 currentUser.getNotionWorkspaceIcon(),
+                currentUser.getNotionTargetDatabaseId(),
                 // Add the new usage fields
                 currentUser.getRequestsInCurrentDay(),
                 currentUser.getRequestsInCurrentMonth(),
