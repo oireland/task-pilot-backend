@@ -2,7 +2,9 @@ package com.taskpilot.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 public record VerifyUserDTO(
         @NotBlank(message = "email is required")
         String email,

@@ -1,22 +1,50 @@
 package com.taskpilot.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.io.IOException;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.badRequest().body("Validation failed");
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(
+            MissingServletRequestParameterException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler({ ConstraintViolationException.class, MethodArgumentTypeMismatchException.class })
+    public ResponseEntity<Object> handleConstraintViolations(Exception ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
 
     @ExceptionHandler(UnsupportedFileTypeException.class)
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
@@ -49,12 +77,12 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.create(ex, HttpStatus.INTERNAL_SERVER_ERROR, "Received an empty or invalid response from the Hugging Face API. Please check the API configuration and try again."));
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(JsonProcessingException.class)
     public ResponseEntity<ErrorResponse> handleJsonProcessingException(Exception ex) {
         logger.error("Failed to parse Json");
         return ResponseEntity.internalServerError()
-                .body(ErrorResponse.create(ex, HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while processing JSON data. Please check the input format and try again."));
+                .body(ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, "An error occurred while processing JSON data. Please check the input format and try again."));
     }
 
     @ExceptionHandler(Exception.class)

@@ -3,6 +3,7 @@ package com.taskpilot.model;
 
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
@@ -289,7 +290,8 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // You can expand this to support roles (e.g., ROLE_USER, ROLE_ADMIN)
-        return List.of();
+        // Give every user the default role of "ROLE_USER".
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override
