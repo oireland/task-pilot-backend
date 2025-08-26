@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,7 +83,7 @@ class EquationParserTest {
         // ASSERT
         assertEquals(TEST_RESPONSE, result);
         verify(chatClient).prompt();
-        verify(requestSpec).user(any(Consumer.class));
+        verify(requestSpec).user(ArgumentMatchers.<Consumer<ChatClient.PromptUserSpec>>any());
         verify(requestSpec).call();
         verify(callResponseSpec).content();
     }
