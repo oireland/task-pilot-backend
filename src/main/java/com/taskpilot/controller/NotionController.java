@@ -1,5 +1,3 @@
-// controllers/NotionController.java
-
 package com.taskpilot.controller;
 
 import com.taskpilot.dto.notion.DatabaseInfoDTO;
