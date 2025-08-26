@@ -36,7 +36,7 @@ public class EquationParser implements DocumentParser{
                 .user(u -> u.text(promptFactory.pdfTextAndMathExtractor)
                         .media(MimeType.valueOf(Objects.requireNonNull(file.getContentType())), fileResource)).call().content();
 
-        if (response == null) {
+        if (response == null || response.trim().isEmpty()) {
             throw new InvalidLLMResponseException("Received empty response from the LLM.");
         }
 
