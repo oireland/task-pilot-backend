@@ -13,7 +13,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +49,7 @@ class TaskRepositoryTest {
     void findByIdAndUser_ShouldReturnTask_WhenIdExistsAndUserMatches() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = createAndPersistTask("Test Task", "Description", Arrays.asList("Item 1", "Item 2"), user);
+        Task task = createAndPersistTask("Test Task", "Description", List.of("Item 1", "Item 2"), user);
 
         // ACT
         Optional<Task> result = taskRepository.findByIdAndUser(task.getId(), user);
@@ -67,7 +66,7 @@ class TaskRepositoryTest {
         // ARRANGE
         User user1 = createAndPersistUser("john@example.com");
         User user2 = createAndPersistUser("jane@example.com");
-        Task task = createAndPersistTask("Test Task", "Description", Arrays.asList("Item 1"), user1);
+        Task task = createAndPersistTask("Test Task", "Description", List.of("Item 1"), user1);
 
         // ACT
         Optional<Task> result = taskRepository.findByIdAndUser(task.getId(), user2);
@@ -107,7 +106,7 @@ class TaskRepositoryTest {
     void findByIdAndUser_ShouldHandleNull_User() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = createAndPersistTask("Test Task", "Description", Arrays.asList("Item 1"), user);
+        Task task = createAndPersistTask("Test Task", "Description", List.of("Item 1"), user);
 
         // ACT & ASSERT
         assertDoesNotThrow(() -> {
@@ -122,7 +121,7 @@ class TaskRepositoryTest {
     void deleteByIdAndUser_ShouldDeleteTask_WhenIdExistsAndUserMatches() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = createAndPersistTask("Task to Delete", "Description", Arrays.asList("Item 1"), user);
+        Task task = createAndPersistTask("Task to Delete", "Description", List.of("Item 1"), user);
         Long taskId = task.getId();
 
         // ACT
@@ -142,7 +141,7 @@ class TaskRepositoryTest {
         // ARRANGE
         User user1 = createAndPersistUser("john@example.com");
         User user2 = createAndPersistUser("jane@example.com");
-        Task task = createAndPersistTask("Task to Delete", "Description", Arrays.asList("Item 1"), user1);
+        Task task = createAndPersistTask("Task to Delete", "Description", List.of("Item 1"), user1);
 
         // ACT
         int deletedCount = taskRepository.deleteByIdAndUser(task.getId(), user2);
@@ -186,7 +185,7 @@ class TaskRepositoryTest {
     void deleteByIdAndUser_ShouldHandleNull_User() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = createAndPersistTask("Test Task", "Description", Arrays.asList("Item 1"), user);
+        Task task = createAndPersistTask("Test Task", "Description", List.of("Item 1"), user);
 
         // ACT & ASSERT
         assertDoesNotThrow(() -> {
@@ -201,11 +200,11 @@ class TaskRepositoryTest {
     void deleteByIdInAndUser_ShouldDeleteMultipleTasks_WhenIdsExistAndUserMatches() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task1 = createAndPersistTask("Task 1", "Description 1", Arrays.asList("Item 1"), user);
-        Task task2 = createAndPersistTask("Task 2", "Description 2", Arrays.asList("Item 2"), user);
-        Task task3 = createAndPersistTask("Task 3", "Description 3", Arrays.asList("Item 3"), user);
+        Task task1 = createAndPersistTask("Task 1", "Description 1", List.of("Item 1"), user);
+        Task task2 = createAndPersistTask("Task 2", "Description 2", List.of("Item 2"), user);
+        Task task3 = createAndPersistTask("Task 3", "Description 3", List.of("Item 3"), user);
 
-        List<Long> taskIds = Arrays.asList(task1.getId(), task2.getId());
+        List<Long> taskIds = List.of(task1.getId(), task2.getId());
 
         // ACT
         int deletedCount = taskRepository.deleteByIdInAndUser(taskIds, user);
@@ -225,11 +224,11 @@ class TaskRepositoryTest {
         // ARRANGE
         User user1 = createAndPersistUser("john@example.com");
         User user2 = createAndPersistUser("jane@example.com");
-        Task task1 = createAndPersistTask("User1 Task 1", "Description", Arrays.asList("Item 1"), user1);
-        Task task2 = createAndPersistTask("User1 Task 2", "Description", Arrays.asList("Item 2"), user1);
-        Task task3 = createAndPersistTask("User2 Task", "Description", Arrays.asList("Item 3"), user2);
+        Task task1 = createAndPersistTask("User1 Task 1", "Description", List.of("Item 1"), user1);
+        Task task2 = createAndPersistTask("User1 Task 2", "Description", List.of("Item 2"), user1);
+        Task task3 = createAndPersistTask("User2 Task", "Description", List.of("Item 3"), user2);
 
-        List<Long> taskIds = Arrays.asList(task1.getId(), task2.getId(), task3.getId());
+        List<Long> taskIds = List.of(task1.getId(), task2.getId(), task3.getId());
 
         // ACT
         int deletedCount = taskRepository.deleteByIdInAndUser(taskIds, user1);
@@ -249,9 +248,9 @@ class TaskRepositoryTest {
         // ARRANGE
         User user1 = createAndPersistUser("john@example.com");
         User user2 = createAndPersistUser("jane@example.com");
-        Task task = createAndPersistTask("User1 Task", "Description", Arrays.asList("Item 1"), user1);
+        Task task = createAndPersistTask("User1 Task", "Description", List.of("Item 1"), user1);
 
-        List<Long> taskIds = Arrays.asList(task.getId());
+        List<Long> taskIds = List.of(task.getId());
 
         // ACT
         int deletedCount = taskRepository.deleteByIdInAndUser(taskIds, user2);
@@ -279,7 +278,7 @@ class TaskRepositoryTest {
     void deleteByIdInAndUser_ShouldHandleNonExistentIds_Gracefully() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        List<Long> nonExistentIds = Arrays.asList(999L, 1000L);
+        List<Long> nonExistentIds = List.of(999L, 1000L);
 
         // ACT
         int deletedCount = taskRepository.deleteByIdInAndUser(nonExistentIds, user);
@@ -293,8 +292,8 @@ class TaskRepositoryTest {
     void deleteByIdInAndUser_ShouldHandleNull_User() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = createAndPersistTask("Test Task", "Description", Arrays.asList("Item 1"), user);
-        List<Long> taskIds = Arrays.asList(task.getId());
+        Task task = createAndPersistTask("Test Task", "Description", List.of("Item 1"), user);
+        List<Long> taskIds = Collections.singletonList(task.getId());
 
         // ACT & ASSERT
         assertDoesNotThrow(() -> {
@@ -309,7 +308,7 @@ class TaskRepositoryTest {
     void save_ShouldPersistTask_WithAllProperties() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = new Task("Test Task", "Test Description", Arrays.asList("Item 1", "Item 2", "Item 3"), user);
+        Task task = new Task("Test Task", "Test Description", List.of("Item 1", "Item 2", "Item 3"), user);
 
         // ACT
         Task savedTask = taskRepository.save(task);
@@ -347,7 +346,7 @@ class TaskRepositoryTest {
     void findById_ShouldReturnTask_WhenIdExists() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        Task task = createAndPersistTask("Test Task", "Description", Arrays.asList("Item 1"), user);
+        Task task = createAndPersistTask("Test Task", "Description", List.of("Item 1"), user);
 
         // ACT
         Optional<Task> result = taskRepository.findById(task.getId());
@@ -372,8 +371,8 @@ class TaskRepositoryTest {
     void count_ShouldReturnCorrectNumber_OfTasks() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        createAndPersistTask("Task 1", "Description 1", Arrays.asList("Item 1"), user);
-        createAndPersistTask("Task 2", "Description 2", Arrays.asList("Item 2"), user);
+        createAndPersistTask("Task 1", "Description 1", List.of("Item 1"), user);
+        createAndPersistTask("Task 2", "Description 2", List.of("Item 2"), user);
 
         // ACT
         long count = taskRepository.count();
@@ -387,8 +386,8 @@ class TaskRepositoryTest {
     void findAll_ShouldReturnAllTasks() {
         // ARRANGE
         User user = createAndPersistUser("john@example.com");
-        createAndPersistTask("Task 1", "Description 1", Arrays.asList("Item 1"), user);
-        createAndPersistTask("Task 2", "Description 2", Arrays.asList("Item 2"), user);
+        createAndPersistTask("Task 1", "Description 1", List.of("Item 1"), user);
+        createAndPersistTask("Task 2", "Description 2", List.of("Item 2"), user);
 
         // ACT
         List<Task> result = taskRepository.findAll();

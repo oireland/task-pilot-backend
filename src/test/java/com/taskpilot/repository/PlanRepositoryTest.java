@@ -12,7 +12,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +47,7 @@ class PlanRepositoryTest {
     @DisplayName("findByName() should return plan when name exists")
     void findByName_ShouldReturnPlan_WhenNameExists() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123", "price_456"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123", "price_456"));
         entityManager.persistAndFlush(plan);
 
         // ACT
@@ -75,7 +74,7 @@ class PlanRepositoryTest {
     @DisplayName("findByName() should handle case sensitivity correctly")
     void findByName_ShouldHandleCaseSensitivity() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123"));
         entityManager.persistAndFlush(plan);
 
         // ACT
@@ -110,7 +109,7 @@ class PlanRepositoryTest {
     @DisplayName("findByStripePriceId() should return plan when stripe price id exists")
     void findByStripePriceId_ShouldReturnPlan_WhenStripePriceIdExists() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_monthly_123", "price_yearly_456"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_monthly_123", "price_yearly_456"));
         entityManager.persistAndFlush(plan);
 
         // ACT
@@ -126,7 +125,7 @@ class PlanRepositoryTest {
     @DisplayName("findByStripePriceId() should return plan when stripe price id is second in list")
     void findByStripePriceId_ShouldReturnPlan_WhenStripePriceIdIsSecondInList() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_monthly_123", "price_yearly_456"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_monthly_123", "price_yearly_456"));
         entityManager.persistAndFlush(plan);
 
         // ACT
@@ -142,7 +141,7 @@ class PlanRepositoryTest {
     @DisplayName("findByStripePriceId() should return empty when stripe price id does not exist")
     void findByStripePriceId_ShouldReturnEmpty_WhenStripePriceIdDoesNotExist() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123", "price_456"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123", "price_456"));
         entityManager.persistAndFlush(plan);
 
         // ACT
@@ -156,7 +155,7 @@ class PlanRepositoryTest {
     @DisplayName("findByStripePriceId() should handle null stripe price id")
     void findByStripePriceId_ShouldHandleNull_StripePriceId() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123"));
         entityManager.persistAndFlush(plan);
 
         // ACT & ASSERT
@@ -170,7 +169,7 @@ class PlanRepositoryTest {
     @DisplayName("findByStripePriceId() should handle empty stripe price id")
     void findByStripePriceId_ShouldHandleEmpty_StripePriceId() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123"));
         entityManager.persistAndFlush(plan);
 
         // ACT
@@ -184,8 +183,8 @@ class PlanRepositoryTest {
     @DisplayName("findByStripePriceId() should work with multiple plans having different price ids")
     void findByStripePriceId_ShouldWorkWithMultiplePlans_WithDifferentPriceIds() {
         // ARRANGE
-        Plan proPlan = new Plan("Pro", 1000, 50, Arrays.asList("price_pro_monthly", "price_pro_yearly"));
-        Plan basicPlan = new Plan("Basic", 100, 5, Arrays.asList("price_basic_monthly", "price_basic_yearly"));
+        Plan proPlan = new Plan("Pro", 1000, 50, List.of("price_pro_monthly", "price_pro_yearly"));
+        Plan basicPlan = new Plan("Basic", 100, 5, List.of("price_basic_monthly", "price_basic_yearly"));
         entityManager.persistAndFlush(proPlan);
         entityManager.persistAndFlush(basicPlan);
 
@@ -206,7 +205,7 @@ class PlanRepositoryTest {
     @DisplayName("save() should persist plan with all properties")
     void save_ShouldPersistPlan_WithAllProperties() {
         // ARRANGE
-        Plan plan = new Plan("Enterprise", 5000, 200, Arrays.asList("price_ent_monthly", "price_ent_yearly"));
+        Plan plan = new Plan("Enterprise", 5000, 200, List.of("price_ent_monthly", "price_ent_yearly"));
 
         // ACT
         Plan savedPlan = planRepository.save(plan);
@@ -240,7 +239,7 @@ class PlanRepositoryTest {
     @DisplayName("findById() should return plan when id exists")
     void findById_ShouldReturnPlan_WhenIdExists() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123"));
         Plan savedPlan = entityManager.persistAndFlush(plan);
 
         // ACT
@@ -265,7 +264,7 @@ class PlanRepositoryTest {
     @DisplayName("existsById() should return true when plan exists")
     void existsById_ShouldReturnTrue_WhenPlanExists() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123"));
         Plan savedPlan = entityManager.persistAndFlush(plan);
 
         // ACT
@@ -289,7 +288,7 @@ class PlanRepositoryTest {
     @DisplayName("deleteById() should remove plan from database")
     void deleteById_ShouldRemovePlan_FromDatabase() {
         // ARRANGE
-        Plan plan = new Plan("Pro", 1000, 50, Arrays.asList("price_123"));
+        Plan plan = new Plan("Pro", 1000, 50, List.of("price_123"));
         Plan savedPlan = entityManager.persistAndFlush(plan);
         Long planId = savedPlan.getId();
 
@@ -307,8 +306,8 @@ class PlanRepositoryTest {
     @DisplayName("count() should return correct number of plans")
     void count_ShouldReturnCorrectNumber_OfPlans() {
         // ARRANGE
-        Plan plan1 = new Plan("Basic", 100, 5, Arrays.asList("price_basic"));
-        Plan plan2 = new Plan("Pro", 1000, 50, Arrays.asList("price_pro"));
+        Plan plan1 = new Plan("Basic", 100, 5, List.of("price_basic"));
+        Plan plan2 = new Plan("Pro", 1000, 50, List.of("price_pro"));
         entityManager.persistAndFlush(plan1);
         entityManager.persistAndFlush(plan2);
 
@@ -323,8 +322,8 @@ class PlanRepositoryTest {
     @DisplayName("findAll() should return all plans")
     void findAll_ShouldReturnAllPlans() {
         // ARRANGE
-        Plan plan1 = new Plan("Basic", 100, 5, Arrays.asList("price_basic"));
-        Plan plan2 = new Plan("Pro", 1000, 50, Arrays.asList("price_pro"));
+        Plan plan1 = new Plan("Basic", 100, 5, List.of("price_basic"));
+        Plan plan2 = new Plan("Pro", 1000, 50, List.of("price_pro"));
         entityManager.persistAndFlush(plan1);
         entityManager.persistAndFlush(plan2);
 

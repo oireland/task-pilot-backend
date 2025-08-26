@@ -173,7 +173,7 @@ class UserRepositoryTest {
 
         // ASSERT
         assertEquals(1, result.size());
-        assertEquals("valid-date@example.com", result.get(0).getEmail());
+        assertEquals("valid-date@example.com", result.getFirst().getEmail());
     }
 
     @Test
