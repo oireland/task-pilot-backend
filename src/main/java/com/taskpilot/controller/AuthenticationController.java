@@ -8,6 +8,7 @@ import com.taskpilot.model.User;
 import com.taskpilot.service.AuthenticationService;
 import com.taskpilot.service.JwtService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,9 +24,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@Valid @RequestBody RegisterUserDTO registerUserDTO) {
-        User registeredUser = authenticationService.signup(registerUserDTO);
-        return ResponseEntity.ok(registeredUser);
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterUserDTO registerUserDTO) {
+        authenticationService.signup(registerUserDTO);
+        return ResponseEntity.ok("User registered successfully. Please check your email.");
     }
 
     @PostMapping("/login")
@@ -47,7 +48,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify/resend")
-    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
+    public ResponseEntity<?> resendVerificationCode( @NotNull @RequestParam  String email) {
         try {
             authenticationService.resendVerificationCode(email);
             return ResponseEntity.ok("Verification code sent");
