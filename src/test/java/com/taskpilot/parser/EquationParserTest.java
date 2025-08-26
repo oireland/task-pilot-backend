@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
@@ -50,7 +51,7 @@ class EquationParserTest {
     private void setupChatClientMocks() {
         // Set up the ChatClient method chaining for parse() tests
         when(chatClient.prompt()).thenReturn(requestSpec);
-        when(requestSpec.user(any(Consumer.class))).thenReturn(requestSpec);
+        when(requestSpec.user(ArgumentMatchers.<Consumer<ChatClient.PromptUserSpec>>any())).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(callResponseSpec);
     }
 

@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 @Service
 public class TaskRouterService {
 
-    private static final Pattern EXERCISE_PATTERN = Pattern.compile("(?i)exercise\\s+\\d+(\\.\\d+)*");
     // Regex to find "Exercise <number>" case-insensitively.
+    private static final Pattern EXERCISE_PATTERN = Pattern.compile("(?i)exercise\\s+\\d+(\\.\\d+)*");
     private final Logger logger = LoggerFactory.getLogger(TaskRouterService.class);
     private final LLMService llmService;
     private final PromptFactory promptFactory;
@@ -24,6 +24,10 @@ public class TaskRouterService {
     }
 
     public ExtractedTaskListDTO processDocument(String documentText) throws InvalidLLMResponseException {
+        if (documentText == null) {
+            return null;
+        }
+
         String chosenPrompt;
 
         // The core routing logic
