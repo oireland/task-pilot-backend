@@ -14,6 +14,12 @@ public class DataSourceConfig {
     @Value("${spring.datasource.url}")
     private String jdbcUrl;
 
+    @Value("${spring.datasource.username}")
+    private String jdbcUsername;
+
+    @Value("${spring.datasource.password}")
+    private String jdbcPassword;
+
     @Bean
     @Primary
     public DataSource dataSource() {
@@ -23,6 +29,8 @@ public class DataSourceConfig {
 
         return DataSourceBuilder.create()
                 .url(jdbcUrl)
+                .username(jdbcUsername)
+                .password(jdbcPassword)
                 .driverClassName("org.postgresql.Driver")
                 .build();
     }

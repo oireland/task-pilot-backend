@@ -1,0 +1,55 @@
+# A descriptive name for the workflow
+name: Java CI with Maven
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  # Triggers the workflow on pull request events for the "main" branch
+  pull_request:
+    branches: [ "main" ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up JDK 21, based on your system.properties file
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21' #
+          distribution: 'temurin'
+          cache: maven # Caches Maven dependencies to speed up future builds
+
+      # Step 3: Build and test with Maven
+      - name: Build and run tests
+        # This command compiles the code, runs all tests, and packages the application.
+        # We pass the required secrets as environment variables to the Maven process.
+        run: mvn clean install
+        env:
+          # These secrets need to be configured in your GitHub repository settings
+          JDBC_DATABASE_URL: ${{ secrets.JDBC_DATABASE_URL }}
+          JDBC_DATABASE_USERNAME: ${{ secrets.JDBC_DATABASE_USERNAME }}
+          JDBC_DATABASE_PASSWORD: ${{ secrets.JDBC_DATABASE_PASSWORD }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          ENCRYPTION_SECRET_KEY: ${{ secrets.ENCRYPTION_SECRET_KEY }}
+          SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          NOTION_CLIENT_ID: ${{ secrets.NOTION_CLIENT_ID }}
+          NOTION_CLIENT_SECRET: ${{ secrets.NOTION_CLIENT_SECRET }}
+          NOTION_REDIRECT_URI: ${{ secrets.NOTION_REDIRECT_URI }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GEMINI_PROJECT_ID: ${{ secrets.GEMINI_PROJECT_ID }}
+          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          PRO_PLAN_PRICE_IDS: ${{ secrets.PRO_PLAN_PRICE_IDS }}
+          SPRING_PROFILES_ACTIVE: test # It's good practice to run CI with a 'test' profile
