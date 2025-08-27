@@ -181,7 +181,7 @@ class NotionControllerTest {
     @DisplayName("POST /api/v1/notion/pages returns 200 when page is created")
     void createPage_returnsOk_whenServiceSucceeds() throws Exception {
         String payload = """
-            {"title":"Doc Title","description":"Desc","tasks":["A","B"]}
+            {"title":"Doc Title","description":"Desc","taskLists":["A","B"]}
         """;
 
         mockMvc.perform(post("/api/v1/notion/pages")
@@ -199,7 +199,7 @@ class NotionControllerTest {
                 .when(notionService).createTasksPage(any(ExtractedTaskListDTO.class), eq(currentUser));
 
         String payload = """
-            {"title":"Doc Title","description":"Desc","tasks":["A","B"]}
+            {"title":"Doc Title","description":"Desc","taskLists":["A","B"]}
         """;
 
         mockMvc.perform(post("/api/v1/notion/pages")

@@ -1,13 +1,16 @@
 package com.taskpilot.dto.task;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 /**
- * A Data Transfer Object for updating an existing Task.
- * Contains only the fields that a user is allowed to modify.
+ * DTO for updating an existing task list.
+ * Replaces the list's metadata and items with the provided values.
  */
 public record UpdateTaskDTO(
         String title,
         String description,
-        List<String> items
+        @Valid
+        List<TodoDTO> items
 ) {}
