@@ -1,5 +1,5 @@
 -- Rename taskLists to task_lists
-ALTER TABLE taskLists RENAME TO task_lists;
+ALTER TABLE "taskLists" RENAME TO task_lists;
 
 -- Create new 'todos' table
 CREATE TABLE todos (

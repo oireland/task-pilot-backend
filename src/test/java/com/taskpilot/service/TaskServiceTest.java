@@ -66,7 +66,7 @@ class TaskServiceTest {
             t.setTaskList(tl);
             todos.add(t);
         }
-        tl.setItems(todos);
+        tl.setTodos(todos);
         return tl;
     }
 
@@ -123,8 +123,8 @@ class TaskServiceTest {
         TaskList savedTaskList = taskCaptor.getValue();
         assertEquals("Extracted Title", savedTaskList.getTitle());
         assertEquals(testUser, savedTaskList.getUser());
-        assertEquals(1, savedTaskList.getItems().size());
-        assertEquals("Task A", savedTaskList.getItems().getFirst().getContent());
+        assertEquals(1, savedTaskList.getTodos().size());
+        assertEquals("Task A", savedTaskList.getTodos().getFirst().getContent());
     }
 
     @Test

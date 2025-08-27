@@ -49,7 +49,7 @@ public class User implements UserDetails {
     @Column(name = "notion_bot_id")
     private String notionBotId;
 
-    @Column(name = "notion_target_database_id") // The DB where to-do items will be created
+    @Column(name = "notion_target_database_id") // The DB where to-do todos will be created
     private String notionTargetDatabaseId;
 
     @Column(name = "notion_target_database_name")

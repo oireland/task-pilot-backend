@@ -55,10 +55,10 @@ public class TaskService {
         newTaskList.setTitle(docData.title());
         newTaskList.setDescription(docData.description());
         newTaskList.setUser(user);
-        newTaskList.setItems(new ArrayList<>());
+        newTaskList.setTodos(new ArrayList<>());
 
         List<Todo> todos = toTodosFromStrings(docData.tasks(), newTaskList);
-        newTaskList.getItems().addAll(todos);
+        newTaskList.getTodos().addAll(todos);
 
         TaskList saved = taskListRepository.save(newTaskList);
         return convertToDto(saved);
@@ -70,10 +70,10 @@ public class TaskService {
         newTaskList.setTitle(taskData.title());
         newTaskList.setDescription(taskData.description());
         newTaskList.setUser(user);
-        newTaskList.setItems(new ArrayList<>());
+        newTaskList.setTodos(new ArrayList<>());
 
-        List<Todo> todos = toTodosFromDtos(taskData.items(), newTaskList);
-        newTaskList.getItems().addAll(todos);
+        List<Todo> todos = toTodosFromDtos(taskData.todos(), newTaskList);
+        newTaskList.getTodos().addAll(todos);
 
         TaskList saved = taskListRepository.save(newTaskList);
         return convertToDto(saved);
@@ -86,9 +86,9 @@ public class TaskService {
                     existing.setTitle(taskData.title());
                     existing.setDescription(taskData.description());
 
-                    List<Todo> newTodos = toTodosFromDtos(taskData.items(), existing);
-                    existing.getItems().clear();
-                    existing.getItems().addAll(newTodos);
+                    List<Todo> newTodos = toTodosFromDtos(taskData.todos(), existing);
+                    existing.getTodos().clear();
+                    existing.getTodos().addAll(newTodos);
 
                     TaskList updated = taskListRepository.save(existing);
                     return convertToDto(updated);
@@ -107,6 +107,27 @@ public class TaskService {
             return 0;
         }
         return taskListRepository.deleteByIdInAndUser(taskIds, user);
+    }
+
+    @Transactional
+    public int batchUpdateTasks(List<UpdateTaskWithIdDTO> tasksToUpdate, User user) {
+        if (tasksToUpdate == null || tasksToUpdate.isEmpty()) {
+            return 0;
+        }
+
+        int updatedCount = 0;
+        for (UpdateTaskWithIdDTO taskData : tasksToUpdate) {
+            Optional<TaskDTO> updated = updateTask(
+                    taskData.id(),
+                    new UpdateTaskDTO(taskData.title(), taskData.description(), taskData.todos()),
+                    user
+            );
+            if (updated.isPresent()) {
+                updatedCount++;
+            }
+        }
+
+        return updatedCount;
     }
 
     private List<Todo> toTodosFromStrings(List<String> items, TaskList parent) {
@@ -144,8 +165,8 @@ public class TaskService {
 
     private TaskDTO convertToDto(TaskList task) {
         List<TodoDTO> todoDTOs = new ArrayList<>();
-        if (task.getItems() != null) {
-            for (Todo t : task.getItems()) {
+        if (task.getTodos() != null) {
+            for (Todo t : task.getTodos()) {
                 todoDTOs.add(new TodoDTO(
                         t.getId(),
                         t.getContent(),

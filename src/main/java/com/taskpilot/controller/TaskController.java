@@ -1,10 +1,7 @@
 package com.taskpilot.controller;
 
 import com.taskpilot.aspect.CheckRateLimit;
-import com.taskpilot.dto.task.CreateTaskDTO;
-import com.taskpilot.dto.task.ExtractedTaskListDTO;
-import com.taskpilot.dto.task.TaskDTO;
-import com.taskpilot.dto.task.UpdateTaskDTO;
+import com.taskpilot.dto.task.*;
 import com.taskpilot.exception.InvalidLLMResponseException;
 import com.taskpilot.model.User;
 import com.taskpilot.repository.UserRepository;
@@ -188,6 +185,27 @@ public class TaskController {
         logger.info("User '{}' successfully deleted {} tasks out of {} requested.", currentUser.getEmail(), deletedCount, taskIds.size());
 
         return ResponseEntity.ok(Map.of("deletedCount", deletedCount));
+    }
+
+    @PutMapping("/batch")
+    public ResponseEntity<Map<String, Integer>> batchUpdateTasks(
+            @Valid @RequestBody BatchUpdateTaskDTO batchUpdateDTO,
+            Authentication authentication) {
+        User currentUser = findUserByAuthentication(authentication);
+        List<UpdateTaskWithIdDTO> tasksToUpdate = batchUpdateDTO.tasks();
+
+        logger.info("User '{}' attempting to batch update {} tasks", currentUser.getEmail(), tasksToUpdate.size());
+
+        if (tasksToUpdate.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        int updatedCount = taskService.batchUpdateTasks(tasksToUpdate, currentUser);
+
+        logger.info("User '{}' successfully updated {} tasks out of {} requested",
+                currentUser.getEmail(), updatedCount, tasksToUpdate.size());
+
+        return ResponseEntity.ok(Map.of("updatedCount", updatedCount));
     }
 
     private User findUserByAuthentication(Authentication authentication) {

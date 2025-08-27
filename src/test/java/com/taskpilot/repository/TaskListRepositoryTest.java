@@ -57,8 +57,8 @@ class TaskListRepositoryTest {
         assertTrue(result.isPresent());
         assertEquals("Test Task", result.get().getTitle());
         assertEquals(user.getId(), result.get().getUser().getId());
-        assertEquals(2, result.get().getItems().size());
-        assertEquals("Item 1", result.get().getItems().getFirst().getContent());
+        assertEquals(2, result.get().getTodos().size());
+        assertEquals("Item 1", result.get().getTodos().getFirst().getContent());
     }
 
     @Test
@@ -278,8 +278,8 @@ class TaskListRepositoryTest {
         assertNotNull(savedTaskList.getId());
         assertEquals("Test Task", savedTaskList.getTitle());
         assertEquals("Test Description", savedTaskList.getDescription());
-        assertEquals(3, savedTaskList.getItems().size());
-        List<String> contents = savedTaskList.getItems().stream().map(Todo::getContent).toList();
+        assertEquals(3, savedTaskList.getTodos().size());
+        List<String> contents = savedTaskList.getTodos().stream().map(Todo::getContent).toList();
         assertTrue(contents.contains("Item 1"));
         assertTrue(contents.contains("Item 2"));
         assertTrue(contents.contains("Item 3"));
@@ -289,19 +289,19 @@ class TaskListRepositoryTest {
     }
 
     @Test
-    @DisplayName("save() should handle task with empty items list")
+    @DisplayName("save() should handle task with empty todos list")
     void save_ShouldHandleTask_WithEmptyItemsList() {
         User user = createAndPersistUser("john@example.com");
         TaskList taskList = new TaskList();
         taskList.setTitle("Test Task");
         taskList.setDescription("Test Description");
         taskList.setUser(user);
-        taskList.setItems(new ArrayList<>());
+        taskList.setTodos(new ArrayList<>());
 
         TaskList savedTaskList = taskListRepository.save(taskList);
 
         assertNotNull(savedTaskList.getId());
-        assertTrue(savedTaskList.getItems().isEmpty());
+        assertTrue(savedTaskList.getTodos().isEmpty());
     }
 
     @Test
@@ -377,6 +377,6 @@ class TaskListRepositoryTest {
             t.setTaskList(parent);
             todos.add(t);
         }
-        parent.setItems(todos);
+        parent.setTodos(todos);
     }
 }

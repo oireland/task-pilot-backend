@@ -49,7 +49,7 @@ CREATE TABLE taskLists (
                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create the collection table for taskList items
+-- Create the collection table for taskList todos
 CREATE TABLE task_items (
                             task_id BIGINT NOT NULL,
                             item VARCHAR(1024),

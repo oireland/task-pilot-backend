@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @param title       The title of the task list.
  * @param description A brief description of the task list.
- * @param items       The list of todos to create (id may be null; checked defaults to false; deadline optional).
+ * @param todos       The list of todos to create (id may be null; checked defaults to false; deadline optional).
  */
 public record CreateTaskDTO(
         @NotBlank(message = "Title cannot be blank")
@@ -21,7 +21,7 @@ public record CreateTaskDTO(
 
         String description,
 
-        @NotNull(message = "Items list cannot be null")
+        @NotNull(message = "Todos list cannot be null")
         @Valid
-        List<TodoDTO> items
+        List<TodoDTO> todos
 ) {}

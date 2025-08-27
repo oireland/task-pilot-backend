@@ -19,7 +19,7 @@ public class TaskList {
     private String description;
 
     @OneToMany(mappedBy = "taskList", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Todo> items = new ArrayList<>();
+    private List<Todo> todos = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -35,10 +35,10 @@ public class TaskList {
 
     public TaskList() {}
 
-    public TaskList(String title, String description, List<Todo> items, User user) {
+    public TaskList(String title, String description, List<Todo> todos, User user) {
         this.title = title;
         this.description = description;
-        this.items = items != null ? items : new ArrayList<>();
+        this.todos = todos != null ? todos : new ArrayList<>();
         this.user = user;
     }
 
@@ -51,8 +51,8 @@ public class TaskList {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public List<Todo> getItems() { return items; }
-    public void setItems(List<Todo> items) { this.items = items != null ? items : new ArrayList<>(); }
+    public List<Todo> getTodos() { return todos; }
+    public void setTodos(List<Todo> todos) { this.todos = todos != null ? todos : new ArrayList<>(); }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
