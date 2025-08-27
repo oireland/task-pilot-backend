@@ -255,18 +255,13 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.15.2</version>
-
+                <version>${flyway.version}</version> <!-- Use property for consistency -->
                 <configuration>
-                    <!--suppress UnresolvedMavenProperty -->
-                    <url>${db.url}</url>
-                    <!--suppress UnresolvedMavenProperty -->
-                    <user>${db.user}</user>
-                    <!--suppress UnresolvedMavenProperty -->
-                    <password>${db.password}</password>
+                    <!-- This tells Flyway to use your config file -->
+                    <configFiles>src/main/resources/flyway.conf</configFiles>
                 </configuration>
-
             </plugin>
+
         </plugins>
     </build>
 

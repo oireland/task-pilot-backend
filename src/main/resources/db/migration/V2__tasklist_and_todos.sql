@@ -1,5 +1,8 @@
--- Rename taskLists to task_lists
-ALTER TABLE "taskLists" RENAME TO task_lists;
+-- C:/Users/irela/Programming/Java/task-pilot-backend/src/main/resources/db/migration/V2__tasklist_and_todos.sql
+
+-- Rename tasklists to task_lists
+-- The original table was created as 'tasklists' (lowercase) because it was unquoted in V1.
+ALTER TABLE tasklists RENAME TO task_lists;
 
 -- Create new 'todos' table
 CREATE TABLE todos (
@@ -18,6 +21,7 @@ CREATE INDEX idx_todos_task_list_id ON todos (task_list_id);
 
 -- Migrate data from 'task_items' (ElementCollection) to 'todos'
 -- Map 'item' -> 'content', default checked=false, deadline=NULL
+-- Note: The foreign key in task_items was task_id, which we map to task_list_id
 INSERT INTO todos (content, checked, deadline, task_list_id)
 SELECT ti.item, FALSE, NULL, ti.task_id
 FROM task_items ti;
