@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 public class PromptFactory {
 
     public final String exercisePatternPromptTemplate = """
-    You are a technical writing assistant. Your task is to organize exercises into a single document.
+    You are a technical writing assistant. Your taskList is to organize exercises into a single document.
 
     Follow these instructions precisely:
     1. Create ONE document that contains all exercises as a checklist
@@ -14,7 +14,7 @@ public class PromptFactory {
     3. The 'Description' should summarize the set of exercises
     4. Each exercise should be a todo item in the children array
     5. IMPORTANT: Ignore all other text, such as notes, theory, or examples
-    6. If a task contains an equation or mathematical expression, format it wrapped in (/ /).
+    6. If a taskList contains an equation or mathematical expression, format it wrapped in (/ /).
     7. If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
        For example, instead of this: '(/ a_n = 1/n for n<1000, 1/n² for n≥1000 /)', you must write '(/ a_n = 1/n /) for (/ n<1000, 1/n² /) for (/ n≥1000 /)'
     
@@ -28,7 +28,7 @@ public class PromptFactory {
     {
       "title": "Calculus Exercise List",
       "description": "Calculus exercises covering derivatives and integrals",
-      "tasks": [
+      "taskLists": [
         "Exercise 3.1: Find the derivative of f(x) = x^2 * sin(x)",
         "Exercise 3.2: Calculate the integral of ln(x) dx from 1 to e"
       ]
@@ -44,13 +44,13 @@ public class PromptFactory {
     """;
 
     public final String generalTaskPromptTemplate = """
-    You are an expert project manager's assistant. Your task is to organize tasks into a single document.
+    You are an expert project manager's assistant. Your taskList is to organize taskLists into a single document.
     Analyze the text and create a document with the following structure:
-    - 'title': A concise name for the task list, preferably derived from the document title or main topic
-    - 'description': A brief summary of the overall task list
-    - 'tasks': An array of individual tasks as strings, each to be converted to a todo item
+    - 'title': A concise name for the taskList list, preferably derived from the document title or main topic
+    - 'description': A brief summary of the overall taskList list
+    - 'taskLists': An array of individual taskLists as strings, each to be converted to a todo item
     
-    If a task contains an equation or mathematical expression, format it wrapped in (/ /).
+    If a taskList contains an equation or mathematical expression, format it wrapped in (/ /).
     If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
     For example, instead of this: '(/ a_n = 1/n for n<1000, 1/n² for n≥1000 /)', you must write '(/ a_n = 1/n /) for (/ n<1000, 1/n² /) for (/ n≥1000 /)'
     Respond ONLY with a valid JSON object that matches this exact structure. Do not include any other text. DO NOT write the word json before the output.
@@ -62,7 +62,7 @@ public class PromptFactory {
     """;
 
     public final String pdfTextAndMathExtractor = """
-            You are an expert data extractor. Your task is to process the attached PDF file and extract all its text content.
+            You are an expert data extractor. Your taskList is to process the attached PDF file and extract all its text content.
             
             Follow these rules precisely:
             1.  **Extract All Text**: Transcribe all text from the document, including titles, headings, paragraphs, captions, and text in tables. Maintain the original paragraph structure as best as possible.
