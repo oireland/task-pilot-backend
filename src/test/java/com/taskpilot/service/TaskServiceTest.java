@@ -1,17 +1,16 @@
 package com.taskpilot.service;
 
-import com.taskpilot.dto.task.CreateTaskDTO;
-import com.taskpilot.dto.task.ExtractedTaskListDTO;
-import com.taskpilot.dto.task.TaskDTO;
-import com.taskpilot.dto.task.UpdateTaskDTO;
-import com.taskpilot.model.Task;
+import com.taskpilot.dto.task.*;
+import com.taskpilot.model.TaskList;
+import com.taskpilot.model.Todo;
 import com.taskpilot.model.User;
-import com.taskpilot.repository.TaskRepository;
+import com.taskpilot.repository.TaskListRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,35 +20,54 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
 
     @Mock
-    private TaskRepository taskRepository;
+    private TaskListRepository taskListRepository;
 
     @InjectMocks
     private TaskService taskService;
 
     private User testUser;
-    private Task testTask;
+    private TaskList testTaskList;
 
     @BeforeEach
     void setUp() {
-        // Create a reusable User and Task for our tests.
         testUser = new User("user@example.com", "password");
         testUser.setId(1L);
 
-        testTask = new Task("Test Title", "Test Description", List.of("Item 1"), testUser);
-        testTask.setId(100L);
-        testTask.setCreatedAt(LocalDateTime.now().minusDays(1));
-        testTask.setUpdatedAt(LocalDateTime.now());
+        testTaskList = createTaskList("Test Title", "Test Description", List.of("Item 1"), testUser);
+        testTaskList.setId(100L);
+        testTaskList.setCreatedAt(LocalDateTime.now().minusDays(1));
+        testTaskList.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private TaskList createTaskList(String title, String description, List<String> items, User user) {
+        TaskList tl = new TaskList();
+        tl.setTitle(title);
+        tl.setDescription(description);
+        tl.setUser(user);
+        List<Todo> todos = new ArrayList<>();
+        for (String c : items) {
+            Todo t = new Todo();
+            t.setContent(c);
+            t.setChecked(false);
+            t.setDeadline(null);
+            t.setTaskList(tl);
+            todos.add(t);
+        }
+        tl.setTodos(todos);
+        return tl;
     }
 
     // --- READ Operations ---
@@ -57,44 +75,34 @@ class TaskServiceTest {
     @Test
     @DisplayName("getTaskByIdForUser() should return TaskDTO if found and owned by user")
     void getTaskByIdForUser_shouldReturnDtoWhenFound() {
-        // ARRANGE: Mock the repository to return our test task.
-        when(taskRepository.findByIdAndUser(100L, testUser)).thenReturn(Optional.of(testTask));
+        when(taskListRepository.findByIdAndUser(100L, testUser)).thenReturn(Optional.of(testTaskList));
 
-        // ACT: Call the service method.
         Optional<TaskDTO> result = taskService.getTaskByIdForUser(100L, testUser);
 
-        // ASSERT: Check that the result is present and contains the correct data.
         assertTrue(result.isPresent());
-        assertEquals(testTask.getTitle(), result.get().title());
-        assertEquals(testTask.getId(), result.get().id());
+        assertEquals(testTaskList.getTitle(), result.get().title());
+        assertEquals(testTaskList.getId(), result.get().id());
     }
 
     @Test
     @DisplayName("getTaskByIdForUser() should return empty Optional if not found")
     void getTaskByIdForUser_shouldReturnEmptyWhenNotFound() {
-        // ARRANGE: Mock the repository to return an empty Optional.
-        when(taskRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
+        when(taskListRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
-        // ACT: Call the service method.
         Optional<TaskDTO> result = taskService.getTaskByIdForUser(999L, testUser);
 
-        // ASSERT: Check that the result is empty.
         assertTrue(result.isEmpty());
     }
 
     @Test
     @DisplayName("getTasksForUser() should return a page of tasks")
     void getTasksForUser_shouldReturnPageOfTasks() {
-        // ARRANGE
         Pageable pageable = Pageable.unpaged();
-        Page<Task> taskPage = new PageImpl<>(List.of(testTask));
-        // We use any(Specification.class) because building the exact Specification object is complex and not necessary for this unit test.
-        when(taskRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(taskPage);
+        Page<TaskList> taskPage = new PageImpl<>(List.of(testTaskList));
+        when(taskListRepository.findAll(ArgumentMatchers.<Specification<TaskList>>any(), eq(pageable))).thenReturn(taskPage);
 
-        // ACT
         Page<TaskDTO> resultPage = taskService.getTasksForUser(testUser, null, pageable);
 
-        // ASSERT
         assertEquals(1, resultPage.getTotalElements());
         assertEquals("Test Title", resultPage.getContent().getFirst().title());
     }
@@ -104,38 +112,36 @@ class TaskServiceTest {
     @Test
     @DisplayName("createTask(ExtractedTaskListDTO) should save a new task")
     void createTaskFromExtractedDTO_shouldSaveNewTask() {
-        // ARRANGE
         ExtractedTaskListDTO dto = new ExtractedTaskListDTO("Extracted Title", "Extracted Desc", List.of("Task A"));
-        when(taskRepository.save(any(Task.class))).thenReturn(new Task());
+        when(taskListRepository.save(any(TaskList.class))).thenReturn(new TaskList());
 
-        // ACT
         taskService.createTask(dto, testUser);
 
-        // ASSERT & VERIFY
-        // Use an ArgumentCaptor to capture the Task object that was passed to the save method.
-        ArgumentCaptor<Task> taskCaptor = ArgumentCaptor.forClass(Task.class);
-        verify(taskRepository).save(taskCaptor.capture());
+        ArgumentCaptor<TaskList> taskCaptor = ArgumentCaptor.forClass(TaskList.class);
+        verify(taskListRepository).save(taskCaptor.capture());
 
-        Task savedTask = taskCaptor.getValue();
-        assertEquals("Extracted Title", savedTask.getTitle());
-        assertEquals(testUser, savedTask.getUser());
+        TaskList savedTaskList = taskCaptor.getValue();
+        assertEquals("Extracted Title", savedTaskList.getTitle());
+        assertEquals(testUser, savedTaskList.getUser());
+        assertEquals(1, savedTaskList.getTodos().size());
+        assertEquals("Task A", savedTaskList.getTodos().getFirst().getContent());
     }
 
     @Test
     @DisplayName("createTask(CreateTaskDTO) should save and return a TaskDTO")
     void createTaskFromCreateDTO_shouldSaveAndReturnDTO() {
-        // ARRANGE
-        CreateTaskDTO dto = new CreateTaskDTO("Manual Title", "Manual Desc", List.of("Manual Item"));
-        // When save is called, return our pre-configured testTask to simulate the DB assigning an ID and timestamps.
-        when(taskRepository.save(any(Task.class))).thenReturn(testTask);
+        CreateTaskDTO dto = new CreateTaskDTO(
+                "Manual Title",
+                "Manual Desc",
+                List.of(new TodoDTO(null, "Manual Item", false, null))
+        );
+        when(taskListRepository.save(any(TaskList.class))).thenReturn(testTaskList);
 
-        // ACT
         TaskDTO resultDTO = taskService.createTask(dto, testUser);
 
-        // ASSERT
         assertNotNull(resultDTO);
-        assertEquals(testTask.getId(), resultDTO.id());
-        assertEquals("Test Title", resultDTO.title()); // The title from the returned testTask
+        assertEquals(testTaskList.getId(), resultDTO.id());
+        assertEquals("Test Title", resultDTO.title());
     }
 
     // --- UPDATE Operation ---
@@ -143,85 +149,66 @@ class TaskServiceTest {
     @Test
     @DisplayName("updateTask() should update and save the task if found")
     void updateTask_shouldUpdateIfFound() {
-        // ARRANGE
-        UpdateTaskDTO updateDto = new UpdateTaskDTO("Updated Title", "Updated Desc", List.of("Updated Item"));
-        when(taskRepository.findByIdAndUser(100L, testUser)).thenReturn(Optional.of(testTask));
-        // When save is called, return the same task that was passed in.
-        when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        UpdateTaskDTO updateDto = new UpdateTaskDTO(
+                "Updated Title",
+                "Updated Desc",
+                List.of(new TodoDTO(null, "Updated Item", false, null))
+        );
+        when(taskListRepository.findByIdAndUser(100L, testUser)).thenReturn(Optional.of(testTaskList));
+        when(taskListRepository.save(any(TaskList.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // ACT
         Optional<TaskDTO> result = taskService.updateTask(100L, updateDto, testUser);
 
-        // ASSERT
         assertTrue(result.isPresent());
         assertEquals("Updated Title", result.get().title());
         assertEquals("Updated Desc", result.get().description());
-
-        // VERIFY that the save method was called.
-        verify(taskRepository).save(any(Task.class));
+        verify(taskListRepository).save(any(TaskList.class));
     }
 
     @Test
     @DisplayName("updateTask() should return empty Optional if task is not found")
     void updateTask_shouldReturnEmptyIfNotFound() {
-        // ARRANGE
         UpdateTaskDTO updateDto = new UpdateTaskDTO("Title", "Desc", List.of());
-        when(taskRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
+        when(taskListRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
-        // ACT
         Optional<TaskDTO> result = taskService.updateTask(999L, updateDto, testUser);
 
-        // ASSERT
         assertTrue(result.isEmpty());
-        // VERIFY that save was never called.
-        verify(taskRepository, never()).save(any(Task.class));
+        verify(taskListRepository, never()).save(any(TaskList.class));
     }
-
 
     // --- DELETE Operations ---
 
     @Test
     @DisplayName("deleteTask() should return true when a task is deleted")
     void deleteTask_shouldReturnTrueWhenDeleted() {
-        // ARRANGE: Mock the repository to return 1, indicating one row was deleted.
-        when(taskRepository.deleteByIdAndUser(100L, testUser)).thenReturn(1);
+        when(taskListRepository.deleteByIdAndUser(100L, testUser)).thenReturn(1);
 
-        // ACT
         boolean result = taskService.deleteTask(100L, testUser);
 
-        // ASSERT
         assertTrue(result);
-        // VERIFY that the correct delete method was called on the repository.
-        verify(taskRepository).deleteByIdAndUser(100L, testUser);
+        verify(taskListRepository).deleteByIdAndUser(100L, testUser);
     }
 
     @Test
     @DisplayName("deleteTask() should return false when no task is deleted")
     void deleteTask_shouldReturnFalseWhenNotDeleted() {
-        // ARRANGE: Mock the repository to return 0, indicating no rows were deleted.
-        when(taskRepository.deleteByIdAndUser(999L, testUser)).thenReturn(0);
+        when(taskListRepository.deleteByIdAndUser(999L, testUser)).thenReturn(0);
 
-        // ACT
         boolean result = taskService.deleteTask(999L, testUser);
 
-        // ASSERT
         assertFalse(result);
     }
 
     @Test
     @DisplayName("deleteTasks() should call repository with correct IDs and return deleted count")
     void deleteTasks_shouldCallRepositoryAndReturnCount() {
-        // ARRANGE
         List<Long> taskIdsToDelete = List.of(100L, 101L, 102L);
-        // Mock the repository to return 3, as if all 3 tasks were deleted.
-        when(taskRepository.deleteByIdInAndUser(taskIdsToDelete, testUser)).thenReturn(3);
+        when(taskListRepository.deleteByIdInAndUser(taskIdsToDelete, testUser)).thenReturn(3);
 
-        // ACT
         int deletedCount = taskService.deleteTasks(taskIdsToDelete, testUser);
 
-        // ASSERT
         assertEquals(3, deletedCount);
-        // VERIFY that the batch delete method was called with the correct list of IDs.
-        verify(taskRepository).deleteByIdInAndUser(taskIdsToDelete, testUser);
+        verify(taskListRepository).deleteByIdInAndUser(taskIdsToDelete, testUser);
     }
 }

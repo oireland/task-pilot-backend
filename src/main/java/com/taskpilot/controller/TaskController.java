@@ -1,12 +1,8 @@
 package com.taskpilot.controller;
 
 import com.taskpilot.aspect.CheckRateLimit;
-import com.taskpilot.dto.task.CreateTaskDTO;
-import com.taskpilot.dto.task.ExtractedTaskListDTO;
-import com.taskpilot.dto.task.TaskDTO;
-import com.taskpilot.dto.task.UpdateTaskDTO;
+import com.taskpilot.dto.task.*;
 import com.taskpilot.exception.InvalidLLMResponseException;
-import com.taskpilot.model.Task;
 import com.taskpilot.model.User;
 import com.taskpilot.repository.UserRepository;
 import com.taskpilot.service.DocumentParsingService;
@@ -55,10 +51,6 @@ public class TaskController {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Retrieves a paginated and searchable list of tasks for the authenticated user.
-     * Defaults to sorting by the most recently updated tasks.
-     */
     @GetMapping
     public ResponseEntity<Page<TaskDTO>> getUserTasks(
             Authentication authentication,
@@ -70,34 +62,19 @@ public class TaskController {
         return ResponseEntity.ok(tasksDtoPage);
     }
 
-    /**
-     * Retrieves a single task by its ID for the authenticated user.
-     *
-     * @param taskId The ID of the task to retrieve.
-     * @param authentication The security context.
-     * @return A response entity with the task DTO or 404 if not found.
-     */
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long taskId, Authentication authentication) {
         User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to retrieve task with id {}", currentUser.getEmail(), taskId);
 
         return taskService.getTaskByIdForUser(taskId, currentUser)
-                .map(ResponseEntity::ok) // If present, wrap in 200 OK
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> {
                     logger.warn("Failed to retrieve task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
-                    return ResponseEntity.notFound().build(); // If empty, return 404
+                    return ResponseEntity.notFound().build();
                 });
     }
 
-    /**
-     * Creates a new task from user-provided data.
-     * This endpoint is NOT rate-limited.
-     *
-     * @param createTaskDTO The request body containing the new task data.
-     * @param authentication The security context.
-     * @return A response entity with the created task and a location header.
-     */
     @PostMapping
     public ResponseEntity<TaskDTO> createTask(
             @Valid @RequestBody CreateTaskDTO createTaskDTO,
@@ -109,7 +86,6 @@ public class TaskController {
 
         logger.info("Successfully created new task with id {} for user '{}'", createdTask.id(), currentUser.getEmail());
 
-        // Build the location URI of the newly created resource
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -119,10 +95,6 @@ public class TaskController {
         return ResponseEntity.created(location).body(createdTask);
     }
 
-    /**
-     * A single endpoint to handle file parsing, task extraction, and saving.
-     * This endpoint IS rate-limited.
-     */
     @PostMapping(value = "/process", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @CheckRateLimit
     public ResponseEntity<?> processDocument(
@@ -155,22 +127,12 @@ public class TaskController {
         }
 
         logger.info("Saving {} extracted tasks for user '{}'", docData.tasks().size(), currentUser.getEmail());
-        Task savedTask = taskService.createTask(docData, currentUser);
-        logger.info("Successfully saved new task list with id {} for user '{}'", savedTask.getId(), currentUser.getEmail());
+        TaskDTO res = taskService.createTask(docData, currentUser);
+        logger.info("Successfully saved new task list with id {} for user '{}'", res.id(), currentUser.getEmail());
 
-        TaskDTO res = new TaskDTO(savedTask.getId(), savedTask.getTitle(), savedTask.getDescription(), savedTask.getItems(), savedTask.getCreatedAt(), savedTask.getUpdatedAt());
         return ResponseEntity.ok(res);
     }
 
-    /**
-     * Updates an existing task for the authenticated user.
-     * This endpoint is NOT rate-limited.
-     *
-     * @param taskId The ID of the task to update.
-     * @param updateTaskDTO The request body containing the new task data.
-     * @param authentication The security context.
-     * @return A response entity with the updated task or 404 if not found.
-     */
     @PutMapping("/{taskId}")
     public ResponseEntity<TaskDTO> updateTask(
             @PathVariable Long taskId,
@@ -180,25 +142,19 @@ public class TaskController {
         User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to update task with id {}", currentUser.getEmail(), taskId);
 
-        // Call the service to update the task
         Optional<TaskDTO> updatedTaskOptional = taskService.updateTask(taskId, updateTaskDTO, currentUser);
 
-        // Use the Optional to build the correct response
         return updatedTaskOptional
                 .map(dto -> {
                     logger.info("Successfully updated task with id {}", taskId);
-                    return ResponseEntity.ok(dto); // HTTP 200 OK with updated task
+                    return ResponseEntity.ok(dto);
                 })
                 .orElseGet(() -> {
                     logger.warn("Failed to update task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
-                    return ResponseEntity.notFound().build(); // HTTP 404 Not Found
+                    return ResponseEntity.notFound().build();
                 });
     }
 
-    /**
-     * Deletes a task by its ID for the authenticated user.
-     * This endpoint is NOT rate-limited.
-     */
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long taskId, Authentication authentication) {
         User currentUser = findUserByAuthentication(authentication);
@@ -208,21 +164,13 @@ public class TaskController {
 
         if (deleted) {
             logger.info("Successfully deleted task with id {} for user '{}'", taskId, currentUser.getEmail());
-            return ResponseEntity.noContent().build(); // HTTP 204 No Content
+            return ResponseEntity.noContent().build();
         } else {
             logger.warn("Failed to delete task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
-            return ResponseEntity.notFound().build(); // HTTP 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 
-    /**
-     * Deletes multiple tasks by a list of IDs for the authenticated user.
-     * This endpoint is NOT rate-limited.
-     *
-     * @param taskIds A JSON list of task IDs to be deleted.
-     * @param authentication The security context.
-     * @return A response entity with the count of deleted tasks.
-     */
     @DeleteMapping("/batch")
     public ResponseEntity<Map<String, Integer>> deleteTasks(@RequestBody List<Long> taskIds, Authentication authentication) {
         User currentUser = findUserByAuthentication(authentication);
@@ -239,9 +187,50 @@ public class TaskController {
         return ResponseEntity.ok(Map.of("deletedCount", deletedCount));
     }
 
-    /**
-     * A private helper method to safely retrieve the User entity from the security context.
-     */
+    @PutMapping("/batch")
+    public ResponseEntity<Map<String, Integer>> batchUpdateTasks(
+            @Valid @RequestBody BatchUpdateTaskDTO batchUpdateDTO,
+            Authentication authentication) {
+        User currentUser = findUserByAuthentication(authentication);
+        List<UpdateTaskWithIdDTO> tasksToUpdate = batchUpdateDTO.tasks();
+
+        logger.info("User '{}' attempting to batch update {} tasks", currentUser.getEmail(), tasksToUpdate.size());
+
+        if (tasksToUpdate.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        int updatedCount = taskService.batchUpdateTasks(tasksToUpdate, currentUser);
+
+        logger.info("User '{}' successfully updated {} tasks out of {} requested",
+                currentUser.getEmail(), updatedCount, tasksToUpdate.size());
+
+        return ResponseEntity.ok(Map.of("updatedCount", updatedCount));
+    }
+
+    @PatchMapping("/todo/{todoId}/check")
+    public ResponseEntity<Void> updateTodoCheckedStatus(
+            @PathVariable Long todoId,
+            @RequestParam boolean checked,
+            Authentication authentication) {
+
+        User currentUser = findUserByAuthentication(authentication);
+        logger.info("User '{}' attempting to update todo {} checked status to {}",
+                currentUser.getEmail(), todoId, checked);
+
+        boolean updated = taskService.updateTodoCheckedStatus(todoId, checked, currentUser);
+
+        if (updated) {
+            logger.info("Successfully updated todo {} checked status for user '{}'",
+                    todoId, currentUser.getEmail());
+            return ResponseEntity.noContent().build();
+        } else {
+            logger.warn("Failed to update todo {}. Todo not found or user '{}' is not the owner.",
+                    todoId, currentUser.getEmail());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     private User findUserByAuthentication(Authentication authentication) {
         String userEmail = authentication.getName();
         return userRepository.findByEmail(userEmail)

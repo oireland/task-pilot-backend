@@ -24,23 +24,24 @@ class UserRepositoryTest {
 
     @Container
     @SuppressWarnings("resource")
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");
 
     @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
+    static void postgresProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
     }
 
     @Autowired
-    private TestEntityManager entityManager;
+    private UserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private TestEntityManager entityManager;
 
     // Tests for findByEmail()
     @Test

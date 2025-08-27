@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.oireland</groupId>
-    <artifactId>task-pilot-backend</artifactId>
+    <artifactId>taskList-pilot-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>TaskExtractionApp</name>
     <description>TaskExtractionApp</description>
@@ -252,6 +252,16 @@
                     </argLine>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>${flyway.version}</version> <!-- Use property for consistency -->
+                <configuration>
+                    <!-- This tells Flyway to use your config file -->
+                    <configFiles>src/main/resources/flyway.conf</configFiles>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 

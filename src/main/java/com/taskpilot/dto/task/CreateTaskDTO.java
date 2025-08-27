@@ -1,5 +1,6 @@
 package com.taskpilot.dto.task;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,11 +8,11 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 /**
- * DTO for creating a new task manually.
+ * DTO for creating a new task list.
  *
  * @param title       The title of the task list.
  * @param description A brief description of the task list.
- * @param items       The list of individual task items.
+ * @param todos       The list of todos to create (id may be null; checked defaults to false; deadline optional).
  */
 public record CreateTaskDTO(
         @NotBlank(message = "Title cannot be blank")
@@ -20,6 +21,7 @@ public record CreateTaskDTO(
 
         String description,
 
-        @NotNull(message = "Items list cannot be null")
-        List<String> items
+        @NotNull(message = "Todos list cannot be null")
+        @Valid
+        List<TodoDTO> todos
 ) {}
