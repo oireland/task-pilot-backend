@@ -130,6 +130,11 @@ public class TaskService {
         return updatedCount;
     }
 
+    @Transactional
+    public boolean updateTodoCheckedStatus(Long todoId, boolean checked, User user) {
+        return taskListRepository.updateTodoCheckedStatus(todoId, checked, user.getId()) > 0;
+    }
+
     private List<Todo> toTodosFromStrings(List<String> items, TaskList parent) {
         List<Todo> todos = new ArrayList<>();
         if (items == null) return todos;

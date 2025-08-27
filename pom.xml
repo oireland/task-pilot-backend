@@ -258,8 +258,11 @@
                 <version>10.15.2</version>
 
                 <configuration>
+                    <!--suppress UnresolvedMavenProperty -->
                     <url>${db.url}</url>
+                    <!--suppress UnresolvedMavenProperty -->
                     <user>${db.user}</user>
+                    <!--suppress UnresolvedMavenProperty -->
                     <password>${db.password}</password>
                 </configuration>
 

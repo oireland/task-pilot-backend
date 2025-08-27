@@ -208,6 +208,29 @@ public class TaskController {
         return ResponseEntity.ok(Map.of("updatedCount", updatedCount));
     }
 
+    @PatchMapping("/todo/{todoId}/check")
+    public ResponseEntity<Void> updateTodoCheckedStatus(
+            @PathVariable Long todoId,
+            @RequestParam boolean checked,
+            Authentication authentication) {
+
+        User currentUser = findUserByAuthentication(authentication);
+        logger.info("User '{}' attempting to update todo {} checked status to {}",
+                currentUser.getEmail(), todoId, checked);
+
+        boolean updated = taskService.updateTodoCheckedStatus(todoId, checked, currentUser);
+
+        if (updated) {
+            logger.info("Successfully updated todo {} checked status for user '{}'",
+                    todoId, currentUser.getEmail());
+            return ResponseEntity.noContent().build();
+        } else {
+            logger.warn("Failed to update todo {}. Todo not found or user '{}' is not the owner.",
+                    todoId, currentUser.getEmail());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     private User findUserByAuthentication(Authentication authentication) {
         String userEmail = authentication.getName();
         return userRepository.findByEmail(userEmail)

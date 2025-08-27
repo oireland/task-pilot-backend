@@ -22,4 +22,9 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long>, JpaSp
     @Modifying
     @Query("DELETE FROM TaskList t WHERE t.id IN :taskIds AND t.user = :user")
     int deleteByIdInAndUser(@Param("taskIds") List<Long> taskIds, @Param("user") User user);
+
+    @Modifying
+    @Query("UPDATE Todo t SET t.checked = :checked WHERE t.id = :todoId AND t.taskList.user.id = :userId")
+    int updateTodoCheckedStatus(@Param("todoId") Long todoId, @Param("checked") boolean checked, @Param("userId") Long userId);
+
 }
