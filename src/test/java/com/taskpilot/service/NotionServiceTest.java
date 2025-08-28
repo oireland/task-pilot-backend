@@ -4,7 +4,8 @@ import com.taskpilot.dto.notion.DatabaseInfoDTO;
 import com.taskpilot.dto.notion.NotionDatabaseResult;
 import com.taskpilot.dto.notion.NotionSearchResponse;
 import com.taskpilot.dto.notion.NotionTokenResponse;
-import com.taskpilot.dto.task.ExtractedTaskListDTO;
+import com.taskpilot.dto.task.TaskListDTO;
+import com.taskpilot.dto.task.TodoDTO;
 import com.taskpilot.exception.InvalidDatabaseSchemaException;
 import com.taskpilot.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,8 @@ class NotionServiceTest {
     private EncryptionService encryptionService;
     @Mock
     private WebClient.Builder webClientBuilder;
+    @Mock
+    private TaskService taskService;
 
     // --- Mocks for the WebClient chain ---
     @Mock
@@ -62,7 +65,7 @@ class NotionServiceTest {
 
     // --- Reusable test data ---
     private User testUser;
-    private ExtractedTaskListDTO taskListDTO;
+    private TaskListDTO taskListDTO;
 
     @BeforeEach
     void setUp() {
@@ -70,7 +73,7 @@ class NotionServiceTest {
         testUser = new User("user@example.com", "password");
         testUser.setId(1L);
 
-        taskListDTO = new ExtractedTaskListDTO("My Tasks", "A description", List.of("Task 1"));
+        taskListDTO = new TaskListDTO(1L, "My Tasks", "A description", List.of(new TodoDTO(1L, "Task 1", false, null)), null, null);
 
         // Manually set the values for the @Value-annotated fields.
         ReflectionTestUtils.setField(notionService, "notionClientId", "test-client-id");
@@ -147,8 +150,11 @@ class NotionServiceTest {
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.toBodilessEntity()).thenReturn(Mono.empty());
 
+        // 3. Mock the taskService
+        when(taskService.getTaskListByIdForUser(anyLong(), any(User.class))).thenReturn(java.util.Optional.of(taskListDTO));
+
         // ACT
-        notionService.createTasksPage(taskListDTO, testUser);
+        notionService.createTaskListPage(taskListDTO.id(), testUser);
 
         // VERIFY that the final part of the chain was called
         verify(responseSpec).toBodilessEntity();
@@ -163,7 +169,7 @@ class NotionServiceTest {
         when(encryptionService.decrypt(any())).thenReturn("decrypted-token");
 
         // ACT & ASSERT
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> notionService.createTasksPage(taskListDTO, testUser));
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> notionService.createTaskListPage(taskListDTO.id(), testUser));
 
         assertEquals("User has not selected a target Notion database.", exception.getMessage());
     }
@@ -175,7 +181,6 @@ class NotionServiceTest {
         testUser.setNotionTargetDatabaseId("db-123");
         when(encryptionService.decrypt(any())).thenReturn("decrypted-token");
 
-        // --- CORRECTED MOCK CHAIN FOR THE ERROR CASE ---
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.defaultHeader(any(), any())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
@@ -188,7 +193,11 @@ class NotionServiceTest {
         when(requestHeadersSpec.retrieve()).thenThrow(new WebClientResponseException(
                 HttpStatus.BAD_REQUEST.value(), "Bad Request", null, null, null));
 
+        // Mock taskService
+        when(taskService.getTaskListByIdForUser(anyLong(), any(User.class))).thenReturn(java.util.Optional.of(taskListDTO));
+
+
         // ACT & ASSERT
-        assertThrows(InvalidDatabaseSchemaException.class, () -> notionService.createTasksPage(taskListDTO, testUser));
+        assertThrows(InvalidDatabaseSchemaException.class, () -> notionService.createTaskListPage(taskListDTO.id(), testUser));
     }
 }

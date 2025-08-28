@@ -26,7 +26,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskDTO> getTasksForUser(User user, String searchTerm, Pageable pageable) {
+    public Page<TaskListDTO> getTasksForUser(User user, String searchTerm, Pageable pageable) {
         Specification<TaskList> spec = (root, query, cb) -> cb.equal(root.get("user"), user);
 
         if (StringUtils.hasText(searchTerm)) {
@@ -45,12 +45,12 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<TaskDTO> getTaskByIdForUser(Long taskId, User user) {
+    public Optional<TaskListDTO> getTaskListByIdForUser(Long taskId, User user) {
         return taskListRepository.findByIdAndUser(taskId, user).map(this::convertToDto);
     }
 
     @Transactional
-    public TaskDTO createTask(ExtractedTaskListDTO docData, User user) {
+    public TaskListDTO createTask(ExtractedTaskListDTO docData, User user) {
         TaskList newTaskList = new TaskList();
         newTaskList.setTitle(docData.title());
         newTaskList.setDescription(docData.description());
@@ -65,7 +65,7 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskDTO createTask(CreateTaskDTO taskData, User user) {
+    public TaskListDTO createTask(CreateTaskDTO taskData, User user) {
         TaskList newTaskList = new TaskList();
         newTaskList.setTitle(taskData.title());
         newTaskList.setDescription(taskData.description());
@@ -80,7 +80,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Optional<TaskDTO> updateTask(Long taskId, UpdateTaskDTO taskData, User user) {
+    public Optional<TaskListDTO> updateTask(Long taskId, UpdateTaskDTO taskData, User user) {
         return taskListRepository.findByIdAndUser(taskId, user)
                 .map(existing -> {
                     existing.setTitle(taskData.title());
@@ -117,7 +117,7 @@ public class TaskService {
 
         int updatedCount = 0;
         for (UpdateTaskWithIdDTO taskData : tasksToUpdate) {
-            Optional<TaskDTO> updated = updateTask(
+            Optional<TaskListDTO> updated = updateTask(
                     taskData.id(),
                     new UpdateTaskDTO(taskData.title(), taskData.description(), taskData.todos()),
                     user
@@ -168,7 +168,7 @@ public class TaskService {
         return todos;
     }
 
-    private TaskDTO convertToDto(TaskList task) {
+    private TaskListDTO convertToDto(TaskList task) {
         List<TodoDTO> todoDTOs = new ArrayList<>();
         if (task.getTodos() != null) {
             for (Todo t : task.getTodos()) {
@@ -180,7 +180,7 @@ public class TaskService {
                 ));
             }
         }
-        return new TaskDTO(
+        return new TaskListDTO(
                 task.getId(),
                 task.getTitle(),
                 task.getDescription(),

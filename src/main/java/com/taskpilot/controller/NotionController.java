@@ -1,8 +1,9 @@
 package com.taskpilot.controller;
 
 import com.taskpilot.dto.notion.DatabaseInfoDTO;
-import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.dto.user.ExchangeCodeDTO;
+import com.taskpilot.exception.InvalidDatabaseSchemaException;
+import com.taskpilot.exception.ResourceNotFoundException;
 import com.taskpilot.model.User;
 import com.taskpilot.service.NotionService;
 import com.taskpilot.service.UserService;
@@ -75,23 +76,38 @@ public class NotionController {
     }
 
 
-    @PostMapping("/pages")
-    public ResponseEntity<?> createNotionPage(
+    @PostMapping("/taskList/{id}")
+    public ResponseEntity<?> createTaskListPage(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ExtractedTaskListDTO docData
+            @PathVariable Long id
     ) {
         try {
             User currentUser = userService.findUserByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
 
-            notionService.createTasksPage(docData, currentUser);
+            // Check if the user has connected Notion and selected a database
+            if (currentUser.getNotionAccessToken() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Notion account not connected."));
+            }
 
-            return ResponseEntity.ok(Map.of("message", "Notion page created successfully."));
+            if (currentUser.getNotionTargetDatabaseId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No Notion database selected."));
+            }
+
+            notionService.createTaskListPage(id, currentUser);
+
+            return ResponseEntity.ok(Map.of("message", "Task list exported to Notion successfully."));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (InvalidDatabaseSchemaException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             logger.error("Failed to create Notion page", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to create page in Notion. " + e.getMessage()));
+                    .body(Map.of("error", "Failed to export task list to Notion: " + e.getMessage()));
         }
     }
 
-    }
+}

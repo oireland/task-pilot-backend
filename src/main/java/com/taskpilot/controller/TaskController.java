@@ -52,22 +52,22 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<TaskDTO>> getUserTasks(
+    public ResponseEntity<Page<TaskListDTO>> getUserTasks(
             Authentication authentication,
             @RequestParam(required = false) String search,
             @PageableDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         User currentUser = findUserByAuthentication(authentication);
-        Page<TaskDTO> tasksDtoPage = taskService.getTasksForUser(currentUser, search, pageable);
+        Page<TaskListDTO> tasksDtoPage = taskService.getTasksForUser(currentUser, search, pageable);
         return ResponseEntity.ok(tasksDtoPage);
     }
 
     @GetMapping("/{taskId}")
-    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long taskId, Authentication authentication) {
+    public ResponseEntity<TaskListDTO> getTaskById(@PathVariable Long taskId, Authentication authentication) {
         User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to retrieve task with id {}", currentUser.getEmail(), taskId);
 
-        return taskService.getTaskByIdForUser(taskId, currentUser)
+        return taskService.getTaskListByIdForUser(taskId, currentUser)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> {
                     logger.warn("Failed to retrieve task with id {}. Task not found or user '{}' is not the owner.", taskId, currentUser.getEmail());
@@ -76,13 +76,13 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskDTO> createTask(
+    public ResponseEntity<TaskListDTO> createTask(
             @Valid @RequestBody CreateTaskDTO createTaskDTO,
             Authentication authentication) {
         User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to create a new task with title '{}'", currentUser.getEmail(), createTaskDTO.title());
 
-        TaskDTO createdTask = taskService.createTask(createTaskDTO, currentUser);
+        TaskListDTO createdTask = taskService.createTask(createTaskDTO, currentUser);
 
         logger.info("Successfully created new task with id {} for user '{}'", createdTask.id(), currentUser.getEmail());
 
@@ -127,14 +127,14 @@ public class TaskController {
         }
 
         logger.info("Saving {} extracted tasks for user '{}'", docData.tasks().size(), currentUser.getEmail());
-        TaskDTO res = taskService.createTask(docData, currentUser);
+        TaskListDTO res = taskService.createTask(docData, currentUser);
         logger.info("Successfully saved new task list with id {} for user '{}'", res.id(), currentUser.getEmail());
 
         return ResponseEntity.ok(res);
     }
 
     @PutMapping("/{taskId}")
-    public ResponseEntity<TaskDTO> updateTask(
+    public ResponseEntity<TaskListDTO> updateTask(
             @PathVariable Long taskId,
             @RequestBody UpdateTaskDTO updateTaskDTO,
             Authentication authentication) {
@@ -142,7 +142,7 @@ public class TaskController {
         User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to update task with id {}", currentUser.getEmail(), taskId);
 
-        Optional<TaskDTO> updatedTaskOptional = taskService.updateTask(taskId, updateTaskDTO, currentUser);
+        Optional<TaskListDTO> updatedTaskOptional = taskService.updateTask(taskId, updateTaskDTO, currentUser);
 
         return updatedTaskOptional
                 .map(dto -> {

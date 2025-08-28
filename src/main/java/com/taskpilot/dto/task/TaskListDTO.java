@@ -3,7 +3,7 @@ package com.taskpilot.dto.task;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record TaskDTO(
+public record TaskListDTO(
         Long id,
         String title,
         String description,

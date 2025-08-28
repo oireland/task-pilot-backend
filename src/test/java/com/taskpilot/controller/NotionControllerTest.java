@@ -3,7 +3,6 @@ package com.taskpilot.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.JwtAuthenticationFilter;
 import com.taskpilot.config.SecurityConfiguration;
-import com.taskpilot.dto.task.ExtractedTaskListDTO;
 import com.taskpilot.dto.user.ExchangeCodeDTO;
 import com.taskpilot.model.User;
 import com.taskpilot.service.JwtService;
@@ -196,7 +195,7 @@ class NotionControllerTest {
     @DisplayName("POST /api/v1/notion/pages returns 500 when service throws")
     void createPage_returnsServerError_whenServiceThrows() throws Exception {
         doThrow(new RuntimeException("oops"))
-                .when(notionService).createTasksPage(any(ExtractedTaskListDTO.class), eq(currentUser));
+                .when(notionService).createTaskListPage(anyLong(), eq(currentUser));
 
         String payload = """
             {"title":"Doc Title","description":"Desc","taskLists":["A","B"]}

@@ -104,8 +104,8 @@ class TaskControllerTest {
     @DisplayName("GET /api/v1/tasks returns 200 with a page of tasks")
     void getUserTasks_returnsOk_withPage() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        TaskDTO t1 = new TaskDTO(1L, "T1", "D1", List.of(new TodoDTO(11L, "i1", false, null)), now, now);
-        TaskDTO t2 = new TaskDTO(2L, "T2", "D2", List.of(new TodoDTO(22L, "i2", false, null)), now, now);
+        TaskListDTO t1 = new TaskListDTO(1L, "T1", "D1", List.of(new TodoDTO(11L, "i1", false, null)), now, now);
+        TaskListDTO t2 = new TaskListDTO(2L, "T2", "D2", List.of(new TodoDTO(22L, "i2", false, null)), now, now);
 
         when(taskService.getTasksForUser(eq(currentUser), eq("foo"), any()))
                 .thenReturn(new PageImpl<>(List.of(t1, t2), PageRequest.of(0, 20), 2));
@@ -124,9 +124,9 @@ class TaskControllerTest {
     @DisplayName("GET /api/v1/tasks/{id} returns 200 when found")
     void getTaskById_returnsOk_whenFound() throws Exception {
         LocalDateTime now = LocalDateTime.now();
-        TaskDTO dto = new TaskDTO(10L, "Title", "Desc", List.of(new TodoDTO(1L, "a", false, null)), now, now);
+        TaskListDTO dto = new TaskListDTO(10L, "Title", "Desc", List.of(new TodoDTO(1L, "a", false, null)), now, now);
 
-        when(taskService.getTaskByIdForUser(10L, currentUser)).thenReturn(Optional.of(dto));
+        when(taskService.getTaskListByIdForUser(10L, currentUser)).thenReturn(Optional.of(dto));
 
         mockMvc.perform(get("/api/v1/tasks/{taskId}", 10L)
                         .header(AUTH_HEADER, BEARER_TOKEN))
@@ -138,7 +138,7 @@ class TaskControllerTest {
     @Test
     @DisplayName("GET /api/v1/tasks/{id} returns 404 when missing")
     void getTaskById_returnsNotFound_whenMissing() throws Exception {
-        when(taskService.getTaskByIdForUser(99L, currentUser)).thenReturn(Optional.empty());
+        when(taskService.getTaskListByIdForUser(99L, currentUser)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/tasks/{taskId}", 99L)
                         .header(AUTH_HEADER, BEARER_TOKEN))
@@ -158,7 +158,7 @@ class TaskControllerTest {
                 )
         );
         LocalDateTime now = LocalDateTime.now();
-        TaskDTO created = new TaskDTO(
+        TaskListDTO created = new TaskListDTO(
                 123L,
                 "New",
                 "Desc",
@@ -193,7 +193,7 @@ class TaskControllerTest {
         when(taskRouterService.processDocument("parsed-text")).thenReturn(docData);
 
         LocalDateTime now = LocalDateTime.now();
-        TaskDTO saved = new TaskDTO(
+        TaskListDTO saved = new TaskListDTO(
                 55L,
                 "Doc Title",
                 "Doc Desc",
@@ -221,7 +221,7 @@ class TaskControllerTest {
                 List.of(new TodoDTO(null, "x", true, null))
         );
         LocalDateTime now = LocalDateTime.now();
-        TaskDTO updated = new TaskDTO(
+        TaskListDTO updated = new TaskListDTO(
                 10L,
                 "Updated Title",
                 "Updated Desc",

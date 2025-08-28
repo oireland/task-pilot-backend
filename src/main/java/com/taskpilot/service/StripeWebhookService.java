@@ -26,7 +26,7 @@ public class StripeWebhookService {
     private final UserRepository userRepository;
     private final PlanRepository planRepository;
     @Value("${plan.free.name}")
-    private static String FREE_PLAN_NAME;
+    private String FREE_PLAN_NAME;
 
 
     public StripeWebhookService(UserRepository userRepository, PlanRepository planRepository) {
