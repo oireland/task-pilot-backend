@@ -57,7 +57,7 @@ public class TaskService {
         newTaskList.setUser(user);
         newTaskList.setTodos(new ArrayList<>());
 
-        List<Todo> todos = toTodosFromStrings(docData.tasks(), newTaskList);
+        List<Todo> todos = toTodosFromStrings(docData.todos(), newTaskList);
         newTaskList.getTodos().addAll(todos);
 
         TaskList saved = taskListRepository.save(newTaskList);

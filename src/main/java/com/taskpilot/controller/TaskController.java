@@ -120,13 +120,13 @@ public class TaskController {
         logger.info("Starting task extraction from document text for user '{}'.", currentUser.getEmail());
         ExtractedTaskListDTO docData = taskRouterService.processDocument(documentText);
 
-        if (docData == null || docData.tasks() == null || docData.tasks().isEmpty()) {
+        if (docData == null || docData.todos() == null || docData.todos().isEmpty()) {
             logger.info("Extraction complete. No tasks found for user '{}'.", currentUser.getEmail());
             ExtractedTaskListDTO emptyDto = new ExtractedTaskListDTO("No Title Found", "No tasks were found in the document.", List.of());
             return ResponseEntity.ok(emptyDto);
         }
 
-        logger.info("Saving {} extracted tasks for user '{}'", docData.tasks().size(), currentUser.getEmail());
+        logger.info("Saving {} extracted tasks for user '{}'", docData.todos().size(), currentUser.getEmail());
         TaskListDTO res = taskService.createTask(docData, currentUser);
         logger.info("Successfully saved new task list with id {} for user '{}'", res.id(), currentUser.getEmail());
 

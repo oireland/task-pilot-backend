@@ -6,5 +6,5 @@ import java.util.List;
 public record ExtractedTaskListDTO(
          String title,
          String description,
-         List<String> tasks){
+         List<String> todos){
 }
