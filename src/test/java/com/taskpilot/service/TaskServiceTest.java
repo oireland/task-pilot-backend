@@ -74,10 +74,10 @@ class TaskServiceTest {
 
     @Test
     @DisplayName("getTaskByIdForUser() should return TaskDTO if found and owned by user")
-    void getTaskByIdForUser_shouldReturnDtoWhenFound() {
+    void getTaskListByIdForUser_shouldReturnDtoWhenFound() {
         when(taskListRepository.findByIdAndUser(100L, testUser)).thenReturn(Optional.of(testTaskList));
 
-        Optional<TaskDTO> result = taskService.getTaskByIdForUser(100L, testUser);
+        Optional<TaskListDTO> result = taskService.getTaskListByIdForUser(100L, testUser);
 
         assertTrue(result.isPresent());
         assertEquals(testTaskList.getTitle(), result.get().title());
@@ -86,10 +86,10 @@ class TaskServiceTest {
 
     @Test
     @DisplayName("getTaskByIdForUser() should return empty Optional if not found")
-    void getTaskByIdForUser_shouldReturnEmptyWhenNotFound() {
+    void getTaskListByIdForUser_shouldReturnEmptyWhenNotFound() {
         when(taskListRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
-        Optional<TaskDTO> result = taskService.getTaskByIdForUser(999L, testUser);
+        Optional<TaskListDTO> result = taskService.getTaskListByIdForUser(999L, testUser);
 
         assertTrue(result.isEmpty());
     }
@@ -101,7 +101,7 @@ class TaskServiceTest {
         Page<TaskList> taskPage = new PageImpl<>(List.of(testTaskList));
         when(taskListRepository.findAll(ArgumentMatchers.<Specification<TaskList>>any(), eq(pageable))).thenReturn(taskPage);
 
-        Page<TaskDTO> resultPage = taskService.getTasksForUser(testUser, null, pageable);
+        Page<TaskListDTO> resultPage = taskService.getTasksForUser(testUser, null, pageable);
 
         assertEquals(1, resultPage.getTotalElements());
         assertEquals("Test Title", resultPage.getContent().getFirst().title());
@@ -137,7 +137,7 @@ class TaskServiceTest {
         );
         when(taskListRepository.save(any(TaskList.class))).thenReturn(testTaskList);
 
-        TaskDTO resultDTO = taskService.createTask(dto, testUser);
+        TaskListDTO resultDTO = taskService.createTask(dto, testUser);
 
         assertNotNull(resultDTO);
         assertEquals(testTaskList.getId(), resultDTO.id());
@@ -157,7 +157,7 @@ class TaskServiceTest {
         when(taskListRepository.findByIdAndUser(100L, testUser)).thenReturn(Optional.of(testTaskList));
         when(taskListRepository.save(any(TaskList.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<TaskDTO> result = taskService.updateTask(100L, updateDto, testUser);
+        Optional<TaskListDTO> result = taskService.updateTask(100L, updateDto, testUser);
 
         assertTrue(result.isPresent());
         assertEquals("Updated Title", result.get().title());
@@ -171,7 +171,7 @@ class TaskServiceTest {
         UpdateTaskDTO updateDto = new UpdateTaskDTO("Title", "Desc", List.of());
         when(taskListRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
-        Optional<TaskDTO> result = taskService.updateTask(999L, updateDto, testUser);
+        Optional<TaskListDTO> result = taskService.updateTask(999L, updateDto, testUser);
 
         assertTrue(result.isEmpty());
         verify(taskListRepository, never()).save(any(TaskList.class));

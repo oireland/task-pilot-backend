@@ -28,7 +28,7 @@ public class PromptFactory {
     {
       "title": "Calculus Exercise List",
       "description": "Calculus exercises covering derivatives and integrals",
-      "taskLists": [
+      "todos": [
         "Exercise 3.1: Find the derivative of f(x) = x^2 * sin(x)",
         "Exercise 3.2: Calculate the integral of ln(x) dx from 1 to e"
       ]
@@ -48,7 +48,7 @@ public class PromptFactory {
     Analyze the text and create a document with the following structure:
     - 'title': A concise name for the taskList list, preferably derived from the document title or main topic
     - 'description': A brief summary of the overall taskList list
-    - 'taskLists': An array of individual taskLists as strings, each to be converted to a todo item
+    - 'todos': An array of individual taskLists as strings, each to be converted to a todo item
     
     If a taskList contains an equation or mathematical expression, format it wrapped in (/ /).
     If there is regular text within an equation, you must split the equation up so that the regular text is not in the (/ /)
