@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.JwtAuthenticationFilter;
 import com.taskpilot.config.SecurityConfiguration;
 import com.taskpilot.dto.user.ExchangeCodeDTO;
+import com.taskpilot.exception.InvalidDatabaseSchemaException;
+import com.taskpilot.exception.ResourceNotFoundException;
 import com.taskpilot.model.User;
 import com.taskpilot.service.JwtService;
 import com.taskpilot.service.NotionService;
@@ -175,37 +177,90 @@ class NotionControllerTest {
                 .andExpect(jsonPath("$.error").value("Failed to retrieve databases."));
     }
 
-    // POST /api/v1/notion/pages
+    // POST /api/v1/notion/taskList/{id}
     @Test
-    @DisplayName("POST /api/v1/notion/pages returns 200 when page is created")
-    void createPage_returnsOk_whenServiceSucceeds() throws Exception {
-        String payload = """
-            {"title":"Doc Title","description":"Desc","taskLists":["A","B"]}
-        """;
+    @DisplayName("POST /api/v1/notion/taskList/{id} returns 200 when task list is exported successfully")
+    void createTaskListPage_returnsOk_whenSuccessful() throws Exception {
+        when(currentUser.getNotionAccessToken()).thenReturn("notion-token");
+        when(currentUser.getNotionTargetDatabaseId()).thenReturn("db-123");
 
-        mockMvc.perform(post("/api/v1/notion/pages")
-                        .header(AUTH_HEADER, BEARER_TOKEN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
+        mockMvc.perform(post("/api/v1/notion/taskList/1")
+                        .header(AUTH_HEADER, BEARER_TOKEN))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Notion page created successfully."));
+                .andExpect(jsonPath("$.message").value("Task list exported to Notion successfully."));
+
+        verify(notionService).createTaskListPage(eq(1L), eq(currentUser));
     }
 
     @Test
-    @DisplayName("POST /api/v1/notion/pages returns 500 when service throws")
-    void createPage_returnsServerError_whenServiceThrows() throws Exception {
-        doThrow(new RuntimeException("oops"))
-                .when(notionService).createTaskListPage(anyLong(), eq(currentUser));
+    @DisplayName("POST /api/v1/notion/taskList/{id} returns 400 when Notion account not connected")
+    void createTaskListPage_returnsBadRequest_whenNotionNotConnected() throws Exception {
+        when(currentUser.getNotionAccessToken()).thenReturn(null);
 
-        String payload = """
-            {"title":"Doc Title","description":"Desc","taskLists":["A","B"]}
-        """;
+        mockMvc.perform(post("/api/v1/notion/taskList/1")
+                        .header(AUTH_HEADER, BEARER_TOKEN))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Notion account not connected."));
 
-        mockMvc.perform(post("/api/v1/notion/pages")
-                        .header(AUTH_HEADER, BEARER_TOKEN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
+        verify(notionService, never()).createTaskListPage(anyLong(), any(User.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/notion/taskList/{id} returns 400 when no database selected")
+    void createTaskListPage_returnsBadRequest_whenNoDatabaseSelected() throws Exception {
+        when(currentUser.getNotionAccessToken()).thenReturn("notion-token");
+        when(currentUser.getNotionTargetDatabaseId()).thenReturn(null);
+
+        mockMvc.perform(post("/api/v1/notion/taskList/1")
+                        .header(AUTH_HEADER, BEARER_TOKEN))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("No Notion database selected."));
+
+        verify(notionService, never()).createTaskListPage(anyLong(), any(User.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/notion/taskList/{id} returns 404 when task list not found")
+    void createTaskListPage_returnsNotFound_whenTaskListNotFound() throws Exception {
+        when(currentUser.getNotionAccessToken()).thenReturn("notion-token");
+        when(currentUser.getNotionTargetDatabaseId()).thenReturn("db-123");
+
+        doThrow(new ResourceNotFoundException("Task list not found with id: 1"))
+                .when(notionService).createTaskListPage(eq(1L), eq(currentUser));
+
+        mockMvc.perform(post("/api/v1/notion/taskList/1")
+                        .header(AUTH_HEADER, BEARER_TOKEN))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Task list not found with id: 1"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/notion/taskList/{id} returns 400 when database schema is invalid")
+    void createTaskListPage_returnsBadRequest_whenInvalidDatabaseSchema() throws Exception {
+        when(currentUser.getNotionAccessToken()).thenReturn("notion-token");
+        when(currentUser.getNotionTargetDatabaseId()).thenReturn("db-123");
+
+        doThrow(new InvalidDatabaseSchemaException("The selected Notion database has an invalid schema."))
+                .when(notionService).createTaskListPage(eq(1L), eq(currentUser));
+
+        mockMvc.perform(post("/api/v1/notion/taskList/1")
+                        .header(AUTH_HEADER, BEARER_TOKEN))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("The selected Notion database has an invalid schema."));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/notion/taskList/{id} returns 500 when service throws unexpected error")
+    void createTaskListPage_returnsServerError_whenServiceThrows() throws Exception {
+        when(currentUser.getNotionAccessToken()).thenReturn("notion-token");
+        when(currentUser.getNotionTargetDatabaseId()).thenReturn("db-123");
+
+        doThrow(new RuntimeException("Unexpected error"))
+                .when(notionService).createTaskListPage(eq(1L), eq(currentUser));
+
+        mockMvc.perform(post("/api/v1/notion/taskList/1")
+                        .header(AUTH_HEADER, BEARER_TOKEN))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error", startsWith("Failed to create page in Notion.")));
+                .andExpect(jsonPath("$.error").value(startsWith("Failed to export task list to Notion:")));
     }
 }
