@@ -43,7 +43,7 @@ class StripeWebhookServiceTest {
         testUser.setPlan(freePlan); // User starts on the free plan
 
         // Manually inject the @Value-annotated static field
-        ReflectionTestUtils.setField(StripeWebhookService.class, "FREE_PLAN_NAME", "Free");
+        ReflectionTestUtils.setField(stripeWebhookService, "FREE_PLAN_NAME", "Free");
     }
 
     /**
