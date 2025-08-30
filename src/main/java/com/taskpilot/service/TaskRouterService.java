@@ -5,6 +5,7 @@ import com.taskpilot.exception.InvalidLLMResponseException;
 import com.taskpilot.prompt.PromptFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
@@ -18,7 +19,7 @@ public class TaskRouterService {
     private final LLMService llmService;
     private final PromptFactory promptFactory;
 
-    public TaskRouterService(LLMService llmService, PromptFactory promptFactory) {
+    public TaskRouterService(@Qualifier("geminiService") LLMService llmService, PromptFactory promptFactory) {
         this.llmService = llmService;
         this.promptFactory = promptFactory;
     }
