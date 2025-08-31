@@ -3,6 +3,7 @@ package com.taskpilot.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.dto.auth.LoginUserDTO;
 import com.taskpilot.dto.auth.RegisterUserDTO;
+import com.taskpilot.dto.auth.TokenRefreshRequestDTO;
 import com.taskpilot.dto.auth.VerifyUserDTO;
 import com.taskpilot.model.User;
 import com.taskpilot.service.AuthenticationService;
@@ -17,6 +18,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -41,6 +45,9 @@ class AuthenticationControllerTest {
 
     @MockitoBean
     private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @TestConfiguration
     static class ValidationConfig {
@@ -210,6 +217,77 @@ class AuthenticationControllerTest {
         void resend_returnsBadRequest_whenEmailMissing() throws Exception {
             // Missing required \`email\` request param leads to 400 by Spring MVC
             mockMvc.perform(post("/api/v1/auth/verify/resend"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    class RefreshTokenTests {
+
+        @Test
+        @DisplayName("POST /api/v1/auth/refresh-token returns 200 with new tokens for valid refresh token")
+        void refreshToken_returnsOk_withNewTokens_whenValid() throws Exception {
+            TokenRefreshRequestDTO req = new TokenRefreshRequestDTO("valid-refresh-token");
+            String userEmail = "test@example.com";
+            UserDetails userDetails = mock(UserDetails.class);
+
+            when(jwtService.extractUsername("valid-refresh-token")).thenReturn(userEmail);
+            when(userDetailsService.loadUserByUsername(userEmail)).thenReturn(userDetails);
+            when(jwtService.isTokenValid("valid-refresh-token", userDetails)).thenReturn(true);
+            when(jwtService.generateToken(userDetails)).thenReturn("new-access-token");
+            when(jwtService.generateRefreshToken(userDetails)).thenReturn("new-refresh-token");
+
+            mockMvc.perform(post("/api/v1/auth/refresh-token")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                    .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
+        }
+
+        @Test
+        @DisplayName("POST /api/v1/auth/refresh-token returns 400 for an invalid token")
+        void refreshToken_returnsBadRequest_whenTokenIsInvalid() throws Exception {
+            TokenRefreshRequestDTO req = new TokenRefreshRequestDTO("invalid-refresh-token");
+            String userEmail = "test@example.com";
+            UserDetails userDetails = mock(UserDetails.class);
+
+            when(jwtService.extractUsername("invalid-refresh-token")).thenReturn(userEmail);
+            when(userDetailsService.loadUserByUsername(userEmail)).thenReturn(userDetails);
+            when(jwtService.isTokenValid("invalid-refresh-token", userDetails)).thenReturn(false);
+
+            mockMvc.perform(post("/api/v1/auth/refresh-token")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Failed to refresh token: Refresh token is not valid!"));
+        }
+
+        @Test
+        @DisplayName("POST /api/v1/auth/refresh-token returns 400 when user not found")
+        void refreshToken_returnsBadRequest_whenUserNotFound() throws Exception {
+            TokenRefreshRequestDTO req = new TokenRefreshRequestDTO("user-not-found-token");
+            String userEmail = "notfound@example.com";
+
+            when(jwtService.extractUsername("user-not-found-token")).thenReturn(userEmail);
+            when(userDetailsService.loadUserByUsername(userEmail))
+                    .thenThrow(new UsernameNotFoundException("User not found"));
+
+            mockMvc.perform(post("/api/v1/auth/refresh-token")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Failed to refresh token: User not found"));
+        }
+
+        @Test
+        @DisplayName("POST /api/v1/auth/refresh-token returns 400 for invalid payload")
+        void refreshToken_returnsBadRequest_whenInvalidPayload() throws Exception {
+            String invalidJson = "{\"refreshToken\":\"\"}"; // Empty token
+
+            mockMvc.perform(post("/api/v1/auth/refresh-token")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(invalidJson))
                     .andExpect(status().isBadRequest());
         }
     }

@@ -89,6 +89,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // Sets the HTTP status to 500 for all other exceptions
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         logger.error("Internal Server Error: {}", ex.getMessage());
+
         return ResponseEntity.internalServerError()
                 .body(ErrorResponse.create(ex, HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later."));
     }
