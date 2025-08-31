@@ -97,17 +97,20 @@ class AuthenticationControllerTest {
         void login_returnsOk_withToken_whenValid() throws Exception {
             LoginUserDTO req = new LoginUserDTO("test@example.com", "Password123!");
             User authenticated = new User("test@example.com", "encodedPassword");
-            String token = "dummy.jwt.token";
+            String accessToken = "dummy.jwt.token";
+            String refreshToken = "dummy.refresh.token";
 
             when(authenticationService.authenticate(any(LoginUserDTO.class))).thenReturn(authenticated);
-            when(jwtService.generateToken(authenticated)).thenReturn(token);
+            when(jwtService.generateToken(authenticated)).thenReturn(accessToken);
+            when(jwtService.generateRefreshToken(authenticated)).thenReturn(refreshToken);
 
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.token").value(token));
+                    .andExpect(jsonPath("$.accessToken").value(accessToken))
+                    .andExpect(jsonPath("$.refreshToken").value(refreshToken));
         }
 
         @Test
@@ -143,17 +146,20 @@ class AuthenticationControllerTest {
         void verify_returnsOk_withToken_whenValid() throws Exception {
             VerifyUserDTO req = new VerifyUserDTO("test@example.com", "123456");
             User verified = new User("test@example.com", "encodedPassword");
-            String token = "dummy.jwt.token.after.verify";
+            String accessToken = "dummy.jwt.token";
+            String refreshToken = "dummy.refresh.token";
 
             when(authenticationService.verifyUser(any(VerifyUserDTO.class))).thenReturn(verified);
-            when(jwtService.generateToken(verified)).thenReturn(token);
+            when(jwtService.generateToken(verified)).thenReturn(accessToken);
+            when(jwtService.generateRefreshToken(verified)).thenReturn(refreshToken);
 
             mockMvc.perform(post("/api/v1/auth/verify")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.token").value(token));
+                    .andExpect(jsonPath("$.accessToken").value(accessToken))
+                    .andExpect(jsonPath("$.refreshToken").value(refreshToken));
         }
 
         @Test
@@ -260,7 +266,7 @@ class AuthenticationControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value("Failed to refresh token: Refresh token is not valid!"));
+                    .andExpect(jsonPath("$.body.detail").value("An error occurred while refreshing the token. Please try again."));
         }
 
         @Test
@@ -277,7 +283,7 @@ class AuthenticationControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value("Failed to refresh token: User not found"));
+                    .andExpect(jsonPath("$.body.detail").value("An error occurred while refreshing the token. Please try again."));
         }
 
         @Test

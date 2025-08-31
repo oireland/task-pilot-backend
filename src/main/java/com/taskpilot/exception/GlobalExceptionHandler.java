@@ -85,6 +85,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, "An error occurred while processing JSON data. Please check the input format and try again."));
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ErrorResponse> handleTokenRefreshException(Exception ex) {
+        logger.error("Failed to refresh token");
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, "An error occurred while refreshing the token. Please try again."));
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // Sets the HTTP status to 500 for all other exceptions
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
