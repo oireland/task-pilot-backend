@@ -3,6 +3,7 @@ package com.taskpilot.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.JwtAuthenticationFilter;
 import com.taskpilot.config.SecurityConfiguration;
+import com.taskpilot.model.Plan;
 import com.taskpilot.model.User;
 import com.taskpilot.service.JwtService;
 import com.taskpilot.service.UserService;
@@ -104,6 +105,9 @@ class UserControllerTest {
         when(currentUser.getRequestsInCurrentMonth()).thenReturn(10);
         when(currentUser.getPlanRefreshDate()).thenReturn(LocalDate.of(2025, 1, 1));
 
+        Plan plan = new Plan("Free", 5, 50, List.of());
+        when(currentUser.getPlan()).thenReturn(plan);
+
         // For endpoints that look up the user by email
         when(userService.findUserByEmail(USER_EMAIL)).thenReturn(Optional.of(currentUser));
     }
@@ -120,7 +124,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.notionTargetDatabaseId").value("db-1"))
                 .andExpect(jsonPath("$.requestsInCurrentDay").value(2))
-                .andExpect(jsonPath("$.requestsInCurrentMonth").value(10));
+                .andExpect(jsonPath("$.requestsInCurrentMonth").value(10))
+                .andExpect(jsonPath("$.plan").value("{\"name\":\"Free\",\"requestsPerDay\":5,\"requestsPerMonth\":50}"));
     }
 
     // GET /api/v1/users/enabled/{email} (public)

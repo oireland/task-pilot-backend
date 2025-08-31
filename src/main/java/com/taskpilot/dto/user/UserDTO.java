@@ -13,5 +13,7 @@ public record UserDTO(
         // Add usage stats here
         int requestsInCurrentDay,
         int requestsInCurrentMonth,
-        LocalDate planRefreshDate
+        LocalDate planRefreshDate,
+        // Plan details
+        PlanDTO plan
 ) {}

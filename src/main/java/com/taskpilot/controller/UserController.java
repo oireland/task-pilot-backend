@@ -1,7 +1,9 @@
 package com.taskpilot.controller;
 
+import com.taskpilot.dto.user.PlanDTO;
 import com.taskpilot.dto.user.SetDatabaseIdDTO;
 import com.taskpilot.dto.user.UserDTO;
+import com.taskpilot.model.Plan;
 import com.taskpilot.model.User;
 import com.taskpilot.service.UserService;
 import jakarta.validation.Valid;
@@ -39,6 +41,7 @@ public class UserController {
         log.info("Fetching current user details...");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
+        Plan userPlan = currentUser.getPlan();
 
         UserDTO userDTO = new UserDTO(
                 currentUser.getId(),
@@ -50,7 +53,10 @@ public class UserController {
                 // Add the new usage fields
                 currentUser.getRequestsInCurrentDay(),
                 currentUser.getRequestsInCurrentMonth(),
-                currentUser.getPlanRefreshDate()
+                currentUser.getPlanRefreshDate(),
+                new PlanDTO(
+                        userPlan.getName(), userPlan.getRequestsPerDay(), userPlan.getRequestsPerMonth()
+                )
         );
 
         return ResponseEntity.ok(userDTO);
