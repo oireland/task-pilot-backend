@@ -86,6 +86,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(FileTooLargeException.class)
+    public ResponseEntity<ErrorResponse> handleFileTooLargeException(FileTooLargeException ex) {
+        logger.error("File is too large");
+        return ResponseEntity.internalServerError()
+                .body(ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, String.format("File with size %d exceeds limit of %d.", ex.getFileSize(), ex.getMaxFileSize())));
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(TokenRefreshException.class)
     public ResponseEntity<ErrorResponse> handleTokenRefreshException(Exception ex) {
         logger.error("Failed to refresh token");

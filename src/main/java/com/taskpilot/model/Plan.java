@@ -70,7 +70,4 @@ public class Plan {
         return stripePriceIds;
     }
 
-    public void setStripePriceIds(List<String> stripePriceIds) {
-        this.stripePriceIds = stripePriceIds;
-    }
 }

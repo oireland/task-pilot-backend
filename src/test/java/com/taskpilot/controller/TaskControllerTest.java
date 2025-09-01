@@ -170,7 +170,7 @@ class TaskControllerTest {
                 now
         );
 
-        when(taskService.createTask(eq(req), eq(currentUser))).thenReturn(created);
+        when(taskService.createTaskList(eq(req), eq(currentUser))).thenReturn(created);
 
         mockMvc.perform(post("/api/v1/tasks")
                         .header(AUTH_HEADER, BEARER_TOKEN)
@@ -201,7 +201,7 @@ class TaskControllerTest {
                 now,
                 now
         );
-        when(taskService.createTask(eq(docData), eq(currentUser))).thenReturn(saved);
+        when(taskService.createTaskList(eq(docData), eq(currentUser))).thenReturn(saved);
 
         mockMvc.perform(multipart("/api/v1/tasks/process")
                         .file(file)

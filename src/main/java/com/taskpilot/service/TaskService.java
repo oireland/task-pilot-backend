@@ -27,10 +27,10 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public Page<TaskListDTO> getTasksForUser(User user, String searchTerm, Pageable pageable) {
-        Specification<TaskList> spec = (root, query, cb) -> cb.equal(root.get("user"), user);
+        Specification<TaskList> spec = (root, _, cb) -> cb.equal(root.get("user"), user);
 
         if (StringUtils.hasText(searchTerm)) {
-            Specification<TaskList> searchSpec = (root, query, cb) -> {
+            Specification<TaskList> searchSpec = (root, _, cb) -> {
                 String pattern = "%" + searchTerm.toLowerCase() + "%";
                 return cb.or(
                         cb.like(cb.lower(root.get("title")), pattern),
@@ -50,7 +50,7 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskListDTO createTask(ExtractedTaskListDTO docData, User user) {
+    public TaskListDTO createTaskList(ExtractedTaskListDTO docData, User user) {
         TaskList newTaskList = new TaskList();
         newTaskList.setTitle(docData.title());
         newTaskList.setDescription(docData.description());
@@ -65,7 +65,7 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskListDTO createTask(CreateTaskDTO taskData, User user) {
+    public TaskListDTO createTaskList(CreateTaskDTO taskData, User user) {
         TaskList newTaskList = new TaskList();
         newTaskList.setTitle(taskData.title());
         newTaskList.setDescription(taskData.description());
