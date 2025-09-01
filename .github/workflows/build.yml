@@ -34,7 +34,7 @@ jobs:
       - name: Build and run tests
         # This command compiles the code, runs all tests, and packages the application.
         # We pass the required secrets as environment variables to the Maven process.
-        run: mvn clean install
+        run: mvn clean install --enable-preview
         env:
           # These secrets need to be configured in your GitHub repository settings
           JDBC_DATABASE_URL: ${{ secrets.JDBC_DATABASE_URL }}
