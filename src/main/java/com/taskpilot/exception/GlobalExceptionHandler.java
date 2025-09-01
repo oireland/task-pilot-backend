@@ -81,8 +81,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(JsonProcessingException.class)
     public ResponseEntity<ErrorResponse> handleJsonProcessingException(Exception ex) {
         logger.error("Failed to parse Json");
-        return ResponseEntity.internalServerError()
+        return ResponseEntity.badRequest()
                 .body(ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, "An error occurred while processing JSON data. Please check the input format and try again."));
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(FileTooLargeException.class)
+    public ResponseEntity<ErrorResponse> handleFileTooLargeException(FileTooLargeException ex) {
+        logger.error("File is too large");
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.create(ex, HttpStatus.BAD_REQUEST, String.format("File with size %dMB exceeds limit of %dMB.", ex.getFileSize() / 1000000, ex.getMaxFileSize() / 1000000)));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

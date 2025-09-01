@@ -46,16 +46,16 @@ class TaskServiceTest {
         testUser = new User("user@example.com", "password");
         testUser.setId(1L);
 
-        testTaskList = createTaskList("Test Title", "Test Description", List.of("Item 1"), testUser);
+        testTaskList = createTaskListList(List.of("Item 1"), testUser);
         testTaskList.setId(100L);
         testTaskList.setCreatedAt(LocalDateTime.now().minusDays(1));
         testTaskList.setUpdatedAt(LocalDateTime.now());
     }
 
-    private TaskList createTaskList(String title, String description, List<String> items, User user) {
+    private TaskList createTaskListList(List<String> items, User user) {
         TaskList tl = new TaskList();
-        tl.setTitle(title);
-        tl.setDescription(description);
+        tl.setTitle("Test Title");
+        tl.setDescription("Test Description");
         tl.setUser(user);
         List<Todo> todos = new ArrayList<>();
         for (String c : items) {
@@ -111,11 +111,11 @@ class TaskServiceTest {
 
     @Test
     @DisplayName("createTask(ExtractedTaskListDTO) should save a new task")
-    void createTaskFromExtractedDTO_shouldSaveNewTask() {
+    void createTaskFromExtractedDTO_shouldSaveNewTaskList() {
         ExtractedTaskListDTO dto = new ExtractedTaskListDTO("Extracted Title", "Extracted Desc", List.of("Task A"));
         when(taskListRepository.save(any(TaskList.class))).thenReturn(new TaskList());
 
-        taskService.createTask(dto, testUser);
+        taskService.createTaskList(dto, testUser);
 
         ArgumentCaptor<TaskList> taskCaptor = ArgumentCaptor.forClass(TaskList.class);
         verify(taskListRepository).save(taskCaptor.capture());
@@ -129,7 +129,7 @@ class TaskServiceTest {
 
     @Test
     @DisplayName("createTask(CreateTaskDTO) should save and return a TaskDTO")
-    void createTaskFromCreateDTO_shouldSaveAndReturnDTO() {
+    void createTaskFromCreateDTO_shouldSaveAndReturnDTOList() {
         CreateTaskDTO dto = new CreateTaskDTO(
                 "Manual Title",
                 "Manual Desc",
@@ -137,7 +137,7 @@ class TaskServiceTest {
         );
         when(taskListRepository.save(any(TaskList.class))).thenReturn(testTaskList);
 
-        TaskListDTO resultDTO = taskService.createTask(dto, testUser);
+        TaskListDTO resultDTO = taskService.createTaskList(dto, testUser);
 
         assertNotNull(resultDTO);
         assertEquals(testTaskList.getId(), resultDTO.id());

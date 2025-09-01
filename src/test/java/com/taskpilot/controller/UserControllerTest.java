@@ -1,6 +1,5 @@
 package com.taskpilot.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.JwtAuthenticationFilter;
 import com.taskpilot.config.SecurityConfiguration;
 import com.taskpilot.model.Plan;
@@ -49,9 +48,6 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     // Security collaborators
     @MockitoBean
@@ -105,7 +101,7 @@ class UserControllerTest {
         when(currentUser.getRequestsInCurrentMonth()).thenReturn(10);
         when(currentUser.getPlanRefreshDate()).thenReturn(LocalDate.of(2025, 1, 1));
 
-        Plan plan = new Plan("Free", 50, 5, List.of());
+        Plan plan = new Plan("Free", 50, 5, 1000000, List.of());
         when(currentUser.getPlan()).thenReturn(plan);
 
         // For endpoints that look up the user by email

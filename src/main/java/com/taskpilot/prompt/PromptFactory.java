@@ -11,7 +11,7 @@ public class PromptFactory {
     Follow these instructions precisely:
     1. Create ONE document that contains all exercises as a checklist
     2. The 'Title' should be determined from the title of the document if available, or else determine the nature of the exercises e.g. "Calculus Exercises".
-    3. The 'Description' should summarize the set of exercises
+    3. The 'Description' should summarise the set of exercises
     4. Each exercise should be a todo item in the children array
     5. IMPORTANT: Ignore all other text, such as notes, theory, or examples
     6. If a taskList contains an equation or mathematical expression, format it wrapped in (/ /).

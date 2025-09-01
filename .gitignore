@@ -18,7 +18,7 @@ src/test/resources/
 *.http
 debug
 src/main/resources/flyway.conf
-src/main/resources/**
+src/main/resources/credentials/**
 
 ### STS ###
 .apt_generated

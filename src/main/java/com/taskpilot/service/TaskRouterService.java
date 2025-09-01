@@ -1,3 +1,4 @@
+// src/main/java/com/taskpilot/service/TaskRouterService.java
 package com.taskpilot.service;
 
 import com.taskpilot.dto.task.ExtractedTaskListDTO;
@@ -8,7 +9,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class TaskRouterService {
@@ -24,23 +33,101 @@ public class TaskRouterService {
         this.promptFactory = promptFactory;
     }
 
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(10);
+
     public ExtractedTaskListDTO processDocument(String documentText) throws InvalidLLMResponseException {
         if (documentText == null) {
             return null;
         }
 
+        List<String> chunks = splitText(documentText);
+
+        if (chunks.size() <= 1) {
+            return processChunk(documentText);
+        }
+
+        // Submit each chunk with its index using a fixed thread pool
+        List<CompletableFuture<ResultWithIndex>> futures = IntStream.range(0, chunks.size())
+                .mapToObj(i -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return new ResultWithIndex(i, processChunk(chunks.get(i)));
+                    } catch (InvalidLLMResponseException e) {
+                        throw new RuntimeException(e);
+                    }
+                }, EXECUTOR))
+                .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        List<ExtractedTaskListDTO> results = futures.stream()
+                .map(CompletableFuture::join)
+                .sorted(Comparator.comparingInt(ResultWithIndex::index))
+                .map(ResultWithIndex::result)
+                .toList();
+
+        return combineResults(results);
+    }
+
+    private record ResultWithIndex(int index, ExtractedTaskListDTO result) {}
+
+
+    private ExtractedTaskListDTO processChunk(String chunk) throws InvalidLLMResponseException {
         String chosenPrompt;
 
         // The core routing logic
-        if (EXERCISE_PATTERN.matcher(documentText).find()) {
+        if (EXERCISE_PATTERN.matcher(chunk).find()) {
             logger.info("Detected 'Exercise' pattern in document text. Using exercise-specific prompt.");
-            chosenPrompt = String.format(promptFactory.exercisePatternPromptTemplate, documentText);
+            chosenPrompt = String.format(promptFactory.exercisePatternPromptTemplate, chunk);
         } else {
             logger.info("No 'Exercise' pattern detected. Using general task prompt.");
-            chosenPrompt = String.format(promptFactory.generalTaskPromptTemplate, documentText);
+            chosenPrompt = String.format(promptFactory.generalTaskPromptTemplate, chunk);
         }
 
         // Call the client with the selected, formatted prompt
         return llmService.executePrompt(chosenPrompt, ExtractedTaskListDTO.class);
+    }
+
+    private List<String> splitText(String text) {
+        List<String> chunks = new ArrayList<>();
+        String[] paragraphs = text.split("\n\n"); // Split by double newline
+        StringBuilder chunk = new StringBuilder();
+        int targetChunkSize = 50000;
+        for (String paragraph : paragraphs) {
+            if (chunk.length() + paragraph.length() > targetChunkSize && !chunk.isEmpty()) {
+                chunks.add(chunk.toString());
+                chunk = new StringBuilder();
+            }
+            chunk.append(paragraph).append("\n\n");
+        }
+        if (!chunk.isEmpty()) {
+            chunks.add(chunk.toString());
+        }
+        return chunks;
+    }
+
+    // src/main/java/com/taskpilot/service/TaskRouterService.java
+    private ExtractedTaskListDTO combineResults(List<ExtractedTaskListDTO> results) {
+        // Title of the first chunk likely to represent the full document
+        String title = results.getFirst().title();
+
+        // Summarise the other descriptions to produce one for the whole document
+        String combinedDescription = results.stream()
+                .map(ExtractedTaskListDTO::description)
+                .collect(Collectors.joining("\n"));
+
+        String finalDescription;
+        try {
+            finalDescription = llmService.executePrompt("Summarise the following text:\n" + combinedDescription, String.class);
+        } catch (InvalidLLMResponseException e) {
+            // Handle the exception, perhaps by falling back to the first description
+            finalDescription = results.getFirst().description();
+        }
+
+        // Include all the todos from all chunks. There shouldn't be any duplicates since the chunks don't overlap.
+        List<String> todos = new ArrayList<>();
+        for (ExtractedTaskListDTO result : results) {
+            todos.addAll(result.todos());
+        }
+        return new ExtractedTaskListDTO(title, finalDescription, todos);
     }
 }

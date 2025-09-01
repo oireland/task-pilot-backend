@@ -50,7 +50,7 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskListDTO createTask(ExtractedTaskListDTO docData, User user) {
+    public TaskListDTO createTaskList(ExtractedTaskListDTO docData, User user) {
         TaskList newTaskList = new TaskList();
         newTaskList.setTitle(docData.title());
         newTaskList.setDescription(docData.description());
@@ -65,7 +65,7 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskListDTO createTask(CreateTaskDTO taskData, User user) {
+    public TaskListDTO createTaskList(CreateTaskDTO taskData, User user) {
         TaskList newTaskList = new TaskList();
         newTaskList.setTitle(taskData.title());
         newTaskList.setDescription(taskData.description());

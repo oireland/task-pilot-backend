@@ -26,6 +26,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private int freePlanRequestsPerMonth;
     @Value("${plan.free.requests-per-day}")
     private int freePlanRequestsPerDay;
+    @Value("${plan.free.max-file-size}")
+    private int freePlanMaxFileSize;
 
     // --- Injecting Pro Plan Properties ---
     @Value("${plan.pro.name}")
@@ -36,6 +38,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private int proPlanRequestsPerMonth;
     @Value("${plan.pro.requests-per-day}")
     private int proPlanRequestsPerDay;
+    @Value("${plan.pro.max-file-size}")
+    private int proPlanMaxFileSize;
 
 
     public DatabaseSeeder(PlanRepository planRepository) {
@@ -52,6 +56,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 freePlanName,
                 freePlanRequestsPerMonth,
                 freePlanRequestsPerDay,
+                freePlanMaxFileSize,
                 Collections.emptyList() // Free plan has no price IDs
         );
 
@@ -60,16 +65,17 @@ public class DatabaseSeeder implements CommandLineRunner {
                 proPlanName,
                 proPlanRequestsPerMonth,
                 proPlanRequestsPerDay,
+                proPlanMaxFileSize,
                 proPlanPriceIds
         );
 
         logger.info("Plan data seeding complete.");
     }
 
-    private void createPlanIfNotFound(String name, int reqMonth, int reqDay, List<String> priceIds) {
+    private void createPlanIfNotFound(String name, int reqMonth, int reqDay, int maxFileSize, List<String> priceIds) {
         // Check if a plan with this name already exists to avoid duplicates
         if (planRepository.findByName(name).isEmpty()) {
-            Plan newPlan = new Plan(name, reqMonth, reqDay, priceIds);
+            Plan newPlan = new Plan(name, reqMonth, reqDay, maxFileSize, priceIds);
             planRepository.save(newPlan);
             logger.info("Created new plan: '{}' with {} price IDs.", name, priceIds.size());
         } else {

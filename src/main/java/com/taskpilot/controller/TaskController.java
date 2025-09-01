@@ -2,6 +2,7 @@ package com.taskpilot.controller;
 
 import com.taskpilot.aspect.CheckRateLimit;
 import com.taskpilot.dto.task.*;
+import com.taskpilot.exception.FileTooLargeException;
 import com.taskpilot.exception.InvalidLLMResponseException;
 import com.taskpilot.model.User;
 import com.taskpilot.repository.UserRepository;
@@ -82,7 +83,7 @@ public class TaskController {
         User currentUser = findUserByAuthentication(authentication);
         logger.info("User '{}' attempting to create a new task with title '{}'", currentUser.getEmail(), createTaskDTO.title());
 
-        TaskListDTO createdTask = taskService.createTask(createTaskDTO, currentUser);
+        TaskListDTO createdTask = taskService.createTaskList(createTaskDTO, currentUser);
 
         logger.info("Successfully created new task with id {} for user '{}'", createdTask.id(), currentUser.getEmail());
 
@@ -109,6 +110,10 @@ public class TaskController {
 
         User currentUser = findUserByAuthentication(authentication);
 
+        if (file.getSize() > currentUser.getPlan().getMaxFileSize()) {
+            throw new FileTooLargeException(file.getSize(), currentUser.getPlan().getMaxFileSize(), "File size exceeds the allowed limit.");
+        }
+
         logger.info("Parsing document '{}' for user '{}'", file.getOriginalFilename(), currentUser.getEmail());
         String documentText = parsingService.parseDocument(file, hasEquations);
 
@@ -127,7 +132,7 @@ public class TaskController {
         }
 
         logger.info("Saving {} extracted tasks for user '{}'", docData.todos().size(), currentUser.getEmail());
-        TaskListDTO res = taskService.createTask(docData, currentUser);
+        TaskListDTO res = taskService.createTaskList(docData, currentUser);
         logger.info("Successfully saved new task list with id {} for user '{}'", res.id(), currentUser.getEmail());
 
         return ResponseEntity.ok(res);

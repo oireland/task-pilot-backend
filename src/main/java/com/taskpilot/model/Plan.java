@@ -21,6 +21,9 @@ public class Plan {
     @Column(nullable = false)
     private int requestsPerDay;
 
+    @Column(nullable = false)
+    private int maxFileSize;
+
     /**
      * This allows a single plan (e.g., "Pro") to be associated with
      * multiple Stripe Price IDs (e.g., one for monthly, one for yearly).
@@ -34,10 +37,11 @@ public class Plan {
     public Plan() {
     }
 
-    public Plan(String name, int requestsPerMonth, int requestsPerDay, List<String> stripePriceIds) {
+    public Plan(String name, int requestsPerMonth, int requestsPerDay, int maxFileSize, List<String> stripePriceIds) {
         this.name = name;
         this.requestsPerMonth = requestsPerMonth;
         this.requestsPerDay = requestsPerDay;
+        this.maxFileSize = maxFileSize;
         this.stripePriceIds = stripePriceIds;
     }
 
@@ -58,11 +62,12 @@ public class Plan {
         return requestsPerDay;
     }
 
+    public int getMaxFileSize() {
+        return maxFileSize;
+    }
+
     public List<String> getStripePriceIds() {
         return stripePriceIds;
     }
 
-    public void setStripePriceIds(List<String> stripePriceIds) {
-        this.stripePriceIds = stripePriceIds;
-    }
 }

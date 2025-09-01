@@ -29,7 +29,7 @@ class RateLimitingServiceTest {
     @BeforeEach
     void setUp() {
         // Create a plan with specific limits for testing.
-        Plan testPlan = new Plan("Test Plan", 100, 10, null); // 100/month, 10/day
+        Plan testPlan = new Plan("Test Plan", 100, 10, 1000000, null); // 100/month, 10/day
         testUser = new User("user@example.com", "password");
         testUser.setPlan(testPlan);
     }
