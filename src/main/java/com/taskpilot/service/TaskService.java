@@ -27,10 +27,10 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public Page<TaskListDTO> getTasksForUser(User user, String searchTerm, Pageable pageable) {
-        Specification<TaskList> spec = (root, _, cb) -> cb.equal(root.get("user"), user);
+        Specification<TaskList> spec = (root, query, cb) -> cb.equal(root.get("user"), user);
 
         if (StringUtils.hasText(searchTerm)) {
-            Specification<TaskList> searchSpec = (root, _, cb) -> {
+            Specification<TaskList> searchSpec = (root, query, cb) -> {
                 String pattern = "%" + searchTerm.toLowerCase() + "%";
                 return cb.or(
                         cb.like(cb.lower(root.get("title")), pattern),
