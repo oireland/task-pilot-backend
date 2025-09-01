@@ -1,3 +1,4 @@
+// src/test/java/com/taskpilot/service/TaskRouterServiceTest.java
 package com.taskpilot.service;
 
 import com.taskpilot.dto.task.ExtractedTaskListDTO;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -190,5 +192,44 @@ class TaskRouterServiceTest {
         // ASSERT
         assertSame(MOCK_RESPONSE, result);
         verify(llmService).executePrompt(expectedPrompt, ExtractedTaskListDTO.class);
+    }
+
+    @Test
+    @DisplayName("processDocument() should chunk large document and combine results")
+    void processDocument_ShouldChunkLargeDocumentAndCombineResults() throws InvalidLLMResponseException {
+        // ARRANGE
+        String largeDocument = "Paragraph 1\n\nParagraph 2\n\n" + "Paragraph 3".repeat(1000);
+        ExtractedTaskListDTO response1 = new ExtractedTaskListDTO("Title 1", "Desc 1", List.of("Task 1"));
+        ExtractedTaskListDTO response2 = new ExtractedTaskListDTO("Title 2", "Desc 2", List.of("Task 2"));
+
+        when(llmService.executePrompt(anyString(), eq(ExtractedTaskListDTO.class)))
+                .thenReturn(response1, response2);
+        when(llmService.executePrompt(contains("Summarise"), eq(String.class))).thenReturn("Final Description");
+
+        // ACT
+        ExtractedTaskListDTO result = taskRouterService.processDocument(largeDocument);
+
+        // ASSERT
+        assertEquals("Title 1", result.title());
+        assertEquals("Final Description", result.description());
+        assertEquals(2, result.todos().size());
+        assertTrue(result.todos().contains("Task 1"));
+        assertTrue(result.todos().contains("Task 2"));
+        verify(llmService, times(3)).executePrompt(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("processDocument() should handle a single chunk")
+    void processDocument_ShouldHandleSingleChunk() throws InvalidLLMResponseException {
+        // ARRANGE
+        String document = "This is a short document.";
+        when(llmService.executePrompt(anyString(), eq(ExtractedTaskListDTO.class))).thenReturn(MOCK_RESPONSE);
+
+        // ACT
+        ExtractedTaskListDTO result = taskRouterService.processDocument(document);
+
+        // ASSERT
+        assertSame(MOCK_RESPONSE, result);
+        verify(llmService, times(1)).executePrompt(anyString(), eq(ExtractedTaskListDTO.class));
     }
 }

@@ -117,7 +117,7 @@ public class TaskRouterService {
 
         String finalDescription;
         try {
-            finalDescription = llmService.executePrompt("Summarize the following text:\n" + combinedDescription, String.class);
+            finalDescription = llmService.executePrompt("Summarise the following text:\n" + combinedDescription, String.class);
         } catch (InvalidLLMResponseException e) {
             // Handle the exception, perhaps by falling back to the first description
             finalDescription = results.getFirst().description();
