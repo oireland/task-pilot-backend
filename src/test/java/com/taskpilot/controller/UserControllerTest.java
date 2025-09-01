@@ -105,7 +105,7 @@ class UserControllerTest {
         when(currentUser.getRequestsInCurrentMonth()).thenReturn(10);
         when(currentUser.getPlanRefreshDate()).thenReturn(LocalDate.of(2025, 1, 1));
 
-        Plan plan = new Plan("Free", 50, 5, List.of());
+        Plan plan = new Plan("Free", 50, 5, 1000000, List.of());
         when(currentUser.getPlan()).thenReturn(plan);
 
         // For endpoints that look up the user by email

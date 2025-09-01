@@ -37,8 +37,8 @@ class StripeWebhookServiceTest {
     @BeforeEach
     void setUp() {
         // Create reusable test data
-        proPlan = new Plan("Pro", 100, 15, List.of("price_pro_123"));
-        freePlan = new Plan("Free", 15, 3, List.of());
+        proPlan = new Plan("Pro", 100, 15, 3000000,List.of("price_pro_123"));
+        freePlan = new Plan("Free", 15, 3, 3000000,List.of());
         testUser = new User("customer@example.com", "password");
         testUser.setPlan(freePlan); // User starts on the free plan
 

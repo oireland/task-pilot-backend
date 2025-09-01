@@ -57,7 +57,7 @@ class AuthenticationServiceTest {
     void setUp() {
         // This method runs before each test to set up common objects.
         registerUserDTO = new RegisterUserDTO("test@example.com", "Password123!");
-        freePlan = new Plan("Free", 15, 3, null);
+        freePlan = new Plan("Free", 15, 3,3000000, null);
         testUser = new User("test@example.com", "encodedPassword");
         testUser.setPlan(freePlan);
         // Mock value from application.properties
