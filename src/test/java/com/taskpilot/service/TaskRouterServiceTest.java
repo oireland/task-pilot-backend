@@ -198,7 +198,7 @@ class TaskRouterServiceTest {
     @DisplayName("processDocument() should chunk large document and combine results")
     void processDocument_ShouldChunkLargeDocumentAndCombineResults() throws InvalidLLMResponseException {
         // ARRANGE
-        String largeDocument = "Paragraph 1\n\nParagraph 2\n\n" + "Paragraph 3".repeat(1000);
+        String largeDocument = "Paragraph 1\n\nParagraph 2\n\n" + "Paragraph 3".repeat(5000);
         ExtractedTaskListDTO response1 = new ExtractedTaskListDTO("Title 1", "Desc 1", List.of("Task 1"));
         ExtractedTaskListDTO response2 = new ExtractedTaskListDTO("Title 2", "Desc 2", List.of("Task 2"));
 

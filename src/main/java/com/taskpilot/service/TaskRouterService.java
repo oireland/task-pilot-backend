@@ -10,11 +10,14 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class TaskRouterService {
@@ -30,6 +33,8 @@ public class TaskRouterService {
         this.promptFactory = promptFactory;
     }
 
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(10);
+
     public ExtractedTaskListDTO processDocument(String documentText) throws InvalidLLMResponseException {
         if (documentText == null) {
             return null;
@@ -37,39 +42,34 @@ public class TaskRouterService {
 
         List<String> chunks = splitText(documentText);
 
-        if (chunks.size() <= 1) return processChunk(documentText);
+        if (chunks.size() <= 1) {
+            return processChunk(documentText);
+        }
 
-        // Process multiple chunks concurrently
-        List<CompletableFuture<ExtractedTaskListDTO>> futures = chunks.stream()
-                .map(chunk -> CompletableFuture.supplyAsync(() -> {
+        // Submit each chunk with its index using a fixed thread pool
+        List<CompletableFuture<ResultWithIndex>> futures = IntStream.range(0, chunks.size())
+                .mapToObj(i -> CompletableFuture.supplyAsync(() -> {
                     try {
-                        return processChunk(chunk);
+                        return new ResultWithIndex(i, processChunk(chunks.get(i)));
                     } catch (InvalidLLMResponseException e) {
                         throw new RuntimeException(e);
                     }
-                }))
+                }, EXECUTOR))
                 .toList();
 
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        try {
-            allFutures.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         List<ExtractedTaskListDTO> results = futures.stream()
-                .map(future -> {
-                    try {
-                        return future.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+                .map(CompletableFuture::join)
+                .sorted(Comparator.comparingInt(ResultWithIndex::index))
+                .map(ResultWithIndex::result)
                 .toList();
 
         return combineResults(results);
-
     }
+
+    private record ResultWithIndex(int index, ExtractedTaskListDTO result) {}
+
 
     private ExtractedTaskListDTO processChunk(String chunk) throws InvalidLLMResponseException {
         String chosenPrompt;
@@ -91,7 +91,7 @@ public class TaskRouterService {
         List<String> chunks = new ArrayList<>();
         String[] paragraphs = text.split("\n\n"); // Split by double newline
         StringBuilder chunk = new StringBuilder();
-        int targetChunkSize = 10000;
+        int targetChunkSize = 50000;
         for (String paragraph : paragraphs) {
             if (chunk.length() + paragraph.length() > targetChunkSize && !chunk.isEmpty()) {
                 chunks.add(chunk.toString());
