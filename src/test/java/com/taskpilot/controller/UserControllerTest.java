@@ -1,6 +1,5 @@
 package com.taskpilot.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.JwtAuthenticationFilter;
 import com.taskpilot.config.SecurityConfiguration;
 import com.taskpilot.model.Plan;
@@ -49,9 +48,6 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     // Security collaborators
     @MockitoBean

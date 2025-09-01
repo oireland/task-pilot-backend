@@ -46,16 +46,16 @@ class TaskServiceTest {
         testUser = new User("user@example.com", "password");
         testUser.setId(1L);
 
-        testTaskList = createTaskListList("Test Title", "Test Description", List.of("Item 1"), testUser);
+        testTaskList = createTaskListList(List.of("Item 1"), testUser);
         testTaskList.setId(100L);
         testTaskList.setCreatedAt(LocalDateTime.now().minusDays(1));
         testTaskList.setUpdatedAt(LocalDateTime.now());
     }
 
-    private TaskList createTaskListList(String title, String description, List<String> items, User user) {
+    private TaskList createTaskListList(List<String> items, User user) {
         TaskList tl = new TaskList();
-        tl.setTitle(title);
-        tl.setDescription(description);
+        tl.setTitle("Test Title");
+        tl.setDescription("Test Description");
         tl.setUser(user);
         List<Todo> todos = new ArrayList<>();
         for (String c : items) {
