@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskpilot.config.JwtAuthenticationFilter;
 import com.taskpilot.config.SecurityConfiguration;
 import com.taskpilot.dto.task.*;
+import com.taskpilot.model.Plan;
 import com.taskpilot.model.User;
 import com.taskpilot.repository.UserRepository;
 import com.taskpilot.service.DocumentParsingService;
@@ -187,6 +188,8 @@ class TaskControllerTest {
     @DisplayName("POST /api/v1/tasks/process returns 200 with extracted task when tasks are found")
     void processDocument_returnsOk_withExtracted() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "pdf-bytes".getBytes());
+        Plan plan = new Plan("Free", 50, 5, 1000000, List.of());
+        when(currentUser.getPlan()).thenReturn(plan);
         when(parsingService.parseDocument(any(), eq(false))).thenReturn("parsed-text");
 
         ExtractedTaskListDTO docData = new ExtractedTaskListDTO("Doc Title", "Doc Desc", List.of("x"));
@@ -210,6 +213,22 @@ class TaskControllerTest {
                 .andExpect(jsonPath("$.id").value(55L))
                 .andExpect(jsonPath("$.title").value("Doc Title"));
     }
+
+    @Test
+    @DisplayName("POST /api/v1/tasks/process returns 400 when file size exceeds limit")
+    void processDocument_returnsBadRequest_whenFileSizeExceedsLimit() throws Exception {
+        byte[] largeFileContent = new byte[2000000]; // 2MB
+        MockMultipartFile file = new MockMultipartFile("file", "large.pdf", MediaType.APPLICATION_PDF_VALUE, largeFileContent);
+        Plan plan = new Plan("Free", 50, 5, 1000000, List.of()); // 1MB limit
+        when(currentUser.getPlan()).thenReturn(plan);
+
+        mockMvc.perform(multipart("/api/v1/tasks/process")
+                        .file(file)
+                        .header(AUTH_HEADER, BEARER_TOKEN))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.body.detail").value("File with size 2MB exceeds limit of 1MB."));
+    }
+
 
     // PUT /api/v1/tasks/{taskId}
     @Test
